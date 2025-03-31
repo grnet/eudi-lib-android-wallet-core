@@ -18,6 +18,7 @@ package eu.europa.ec.eudi.wallet.issue.openid4vci
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import eu.europa.ec.eudi.openid4vci.CredentialConfigurationIdentifier
 import eu.europa.ec.eudi.openid4vci.CredentialIssuerId
 import eu.europa.ec.eudi.openid4vci.CredentialIssuerMetadata
@@ -240,6 +241,7 @@ internal class DefaultOpenId4VciManager(
         txCode: String?,
         listener: OpenId4VciManager.OnResult<IssueEvent>,
     ) {
+        Log.i("EUDIW", "test point")
         var authorizedRequest = issuerAuthorization.authorize(issuer, txCode)
         listener(IssueEvent.Started(offer.offeredDocuments.size))
         val issuedDocumentIds = mutableListOf<DocumentId>()

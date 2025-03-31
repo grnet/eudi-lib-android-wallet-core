@@ -1,0 +1,4 @@
+gpg --full-generate-key
+gpg --export-secret-keys >~/.gnupg/secring.gpg
+
+./gradlew publishToMavenLocal
