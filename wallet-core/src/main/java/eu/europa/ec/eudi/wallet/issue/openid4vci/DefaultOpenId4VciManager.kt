@@ -27,6 +27,7 @@ import eu.europa.ec.eudi.openid4vci.DefaultHttpClientFactory
 import eu.europa.ec.eudi.openid4vci.DeferredIssuer
 import eu.europa.ec.eudi.openid4vci.Issuer
 import eu.europa.ec.eudi.openid4vci.KtorHttpClientFactory
+import eu.europa.ec.eudi.openid4vci.SubmissionOutcome
 import eu.europa.ec.eudi.wallet.document.DeferredDocument
 import eu.europa.ec.eudi.wallet.document.DocumentId
 import eu.europa.ec.eudi.wallet.document.DocumentManager
@@ -36,6 +37,7 @@ import eu.europa.ec.eudi.wallet.internal.mainExecutor
 import eu.europa.ec.eudi.wallet.internal.wrappedWithContentNegotiation
 import eu.europa.ec.eudi.wallet.internal.wrappedWithLogging
 import eu.europa.ec.eudi.wallet.issue.openid4vci.IssueEvent.Companion.failure
+import eu.europa.ec.eudi.wallet.issue.openid4vci.SubmitRequest.Response
 import eu.europa.ec.eudi.wallet.logging.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -232,6 +234,22 @@ internal class DefaultOpenId4VciManager(
         resumeWithAuthorization(Uri.parse(uri))
     }
 
+    fun extractVcToken(response: Response): String {
+        Log.d("EBSI!", "extractVcToken")
+        val resp = response
+        val outcome = response.entries.first().value.getOrThrow()
+        if (outcome is SubmissionOutcome.Success) {
+            val (credentials, _) = outcome // We're ignoring the notificationId here
+                Log.d("EBSI!", "Successfully issued credentials:")
+                for (credential in credentials) {
+                    val vc_token = credential.credential.toString()
+                    Log.d("EBSI! VC TOKEN 1", credential.credential.toString())
+                    return vc_token
+                }
+            }
+
+        return "NO TOKEN ?"
+    }
     /**
      * Issues the given [Offer].
      */
@@ -241,7 +259,6 @@ internal class DefaultOpenId4VciManager(
         txCode: String?,
         listener: OpenId4VciManager.OnResult<IssueEvent>,
     ) {
-        Log.i("EUDIW", "test point")
         var authorizedRequest = issuerAuthorization.authorize(issuer, txCode)
         listener(IssueEvent.Started(offer.offeredDocuments.size))
         val issuedDocumentIds = mutableListOf<DocumentId>()
@@ -256,6 +273,8 @@ internal class DefaultOpenId4VciManager(
         val response = submit.request(requestMap).also {
             authorizedRequest = submit.authorizedRequest
         }
+        val vc_token = extractVcToken(response);
+        Log.d("EBSI! VC TOKEN 2", vc_token)
         ProcessResponse(
             documentManager = documentManager,
             deferredContextCreator = DeferredContextCreator(issuer, authorizedRequest),
