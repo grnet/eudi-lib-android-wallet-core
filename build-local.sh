@@ -1,0 +1,1 @@
+./gradlew publishToMavenLocal -PsignAllPublications=false
