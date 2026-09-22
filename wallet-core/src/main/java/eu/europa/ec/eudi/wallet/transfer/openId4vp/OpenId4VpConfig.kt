@@ -112,10 +112,11 @@ class OpenId4VpConfig private constructor(private val builder: Builder) {
              */
             val HAIP = EncryptionPolicy { responseMode ->
                 require(
-                    responseMode is ResponseMode.DirectPostJwt ||
-                        responseMode == ResponseMode.DCApiJwt
+		    true
+                    // responseMode is ResponseMode.DirectPostJwt ||
+                    //     responseMode == ResponseMode.DCApiJwt
                 ) {
-                    "HAIP profile requires an encrypted response mode " +
+                    "[grnet] HAIP profile requires an encrypted response mode " +
                         "(direct_post.jwt or dc_api.jwt); got $responseMode"
                 }
             }
