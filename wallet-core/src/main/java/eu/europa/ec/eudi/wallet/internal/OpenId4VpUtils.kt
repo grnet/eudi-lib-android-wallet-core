@@ -50,18 +50,25 @@ import eu.europa.ec.eudi.wallet.transfer.openId4vp.EncryptionMethod
 import eu.europa.ec.eudi.wallet.transfer.openId4vp.Format
 import eu.europa.ec.eudi.wallet.transfer.openId4vp.OpenId4VpConfig
 import eu.europa.ec.eudi.wallet.transfer.openId4vp.OpenId4VpReaderTrust
+import eu.europa.ec.eudi.openid4vp.HashAlgorithm
+import eu.europa.ec.eudi.openid4vp.SupportedTransactionDataType
+import eu.europa.ec.eudi.openid4vp.TransactionDataType
 import kotlinx.coroutines.withContext
 import kotlinx.io.bytestring.decodeToString
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.add
+import org.multipaz.crypto.Algorithm
 import org.multipaz.crypto.AsymmetricKey
 import org.multipaz.mdoc.response.DeviceResponseGenerator
 import org.multipaz.presentment.CredentialPresentmentSetOptionMemberMatch
 import org.multipaz.presentment.PresentmentUnlockReason
 import org.multipaz.request.JsonRequestedClaim
 import org.multipaz.request.MdocRequestedClaim
+import org.multipaz.util.toBase64Url
 import org.multipaz.sdjwt.SdJwt
 import org.multipaz.sdjwt.credential.SdJwtVcCredential
 import org.multipaz.securearea.KeyUnlockData
@@ -259,7 +266,14 @@ internal fun makeOpenId4VPConfig(
             supportedMethods = config.encryptionMethods.map { it.nimbus }
         ),
         vpConfiguration = VPConfiguration(
-            vpFormatsSupported = config.formats.toVpFormats()
+            vpFormatsSupported = config.formats.toVpFormats(),
+                //here to support generic_json type in transaction data and don't block
+                supportedTransactionDataTypes = listOf(
+                    SupportedTransactionDataType.SdJwtVc(
+                        type = TransactionDataType("generic_json"),
+                        hashAlgorithms = setOf(HashAlgorithm.SHA_256),
+                    )
+                ),//
         ),
         supportedClientIdPrefixes = supportedClientIdPrefixes
     )
@@ -414,6 +428,20 @@ internal suspend fun verifiablePresentationForSdJwtVc(
         val filteredSdJwt = sdJwt.filter { emittedPath, _ ->
             requestPaths.any { requestPath -> pathMatches(requestPath, emittedPath) }
         }
+        val transactionDataHashAlgorithm = match.transactionData.firstNotNullOfOrNull {
+            it.getHashAlgorithm()
+        }
+        val transactionDataClaims: Map<String, kotlinx.serialization.json.JsonElement> =
+            if (match.transactionData.isEmpty()) emptyMap() else buildMap {
+                transactionDataHashAlgorithm?.let { algorithm ->
+                    put("transaction_data_hashes_alg", JsonPrimitive(algorithm.hashAlgorithmName))
+                }
+                put("transaction_data_hashes", buildJsonArray {
+                    match.transactionData.forEach { data ->
+                        add(data.getHash(transactionDataHashAlgorithm ?: Algorithm.SHA256).toByteArray().toBase64Url())
+                    }
+                })
+            }
 
         val serialized = if (filteredSdJwt.kbKey != null) {
             val signingKey = AsymmetricKey.anonymous(
@@ -425,7 +453,10 @@ internal suspend fun verifiablePresentationForSdJwtVc(
                 filteredSdJwt.present(
                     signingKey = signingKey,
                     nonce = resolvedRequestObject.nonce,
-                    audience = audience ?: resolvedRequestObject.client.id.clientId
+                    audience = audience ?: resolvedRequestObject.client.id.clientId,
+                    additionalClaimBuilderAction = {
+                        transactionDataClaims.forEach { (key, value) -> put(key, value) }
+                    }
                 )
             }.compactSerialization
         } else {

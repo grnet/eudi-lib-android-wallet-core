@@ -57,6 +57,26 @@ import org.multipaz.request.Requester
 import org.multipaz.request.RequestedClaim
 import org.multipaz.sdjwt.SdJwt
 import org.multipaz.sdjwt.credential.SdJwtVcCredential
+import org.multipaz.credential.Credential
+import org.multipaz.documenttype.DocumentTypeRepository
+import org.multipaz.documenttype.TransactionType
+import org.multipaz.presentment.TransactionDataJson
+/**
+ * Generic JSON key/value transaction type. Exact attribute names are decided later —
+ *
+ * TODO: `identifier` must match the `type` string the target verifier actually sends
+ * in its `transaction_data` entries — update once known.
+ */
+private object GenericJsonTransactionType : TransactionType(
+    displayName = "Generic transaction data",
+    identifier = "generic_json",
+    attributes = emptyList(),
+) {
+    override suspend fun isApplicable(
+        transactionData: org.multipaz.presentment.TransactionData,
+        credential: Credential
+    ): Boolean = true
+}
 
 /**
  * Processes OpenID4VP requests that use DCQL (Digital Credentials Query Language).
@@ -88,11 +108,15 @@ class DcqlRequestProcessor(
         }
 
     private val credentialSetsMatcher = CredentialSetsMatcher()
+    private val documentTypeRepository = DocumentTypeRepository().apply {
+        addTransactionType(GenericJsonTransactionType)
+    }
 
     override suspend fun process(request: Request): RequestProcessor.ProcessedRequest {
         return try {
             require(request is OpenId4VpRequest) { "Request must be an OpenId4VpRequest" }
 
+            /*here
             // Temporarily reject all requests with transaction data (not yet supported)
             val requestTransactionData = request.resolvedRequestObject.transactionData
             if (!requestTransactionData.isNullOrEmpty()) {
@@ -100,6 +124,15 @@ class DcqlRequestProcessor(
                     IllegalArgumentException("Transaction data is not supported")
                 )
             }
+             */
+            val transactionDataByCredentialId: Map<String, List<TransactionDataJson>> =
+                request.resolvedRequestObject.transactionData
+                    ?.map { it.value }
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { TransactionDataJson.parse(it, documentTypeRepository) }
+                    ?: emptyMap()
+            //αντί να απορρίπτει το request, το μετατρέπει σε χάρτη credentialId → transaction data entries, χρησιμοποιώντας το documentTypeRepository
+            // Aν δεν υπάρχει καθόλου transaction_data στο request, το αποτέλεσμα είναι κενό map — ίδια συμπεριφορά με πριν
 
             val dcql = request.resolvedRequestObject.query
             val credentials = dcql.credentials
@@ -118,7 +151,7 @@ class DcqlRequestProcessor(
             // Find candidate matches for each credential query.
             val matchesByQueryId: Map<QueryId, List<CredentialPresentmentSetOptionMemberMatch>> =
                 credentials.value.associate { query ->
-                    query.id to findMatchesForQuery(query)
+                    query.id to findMatchesForQuery(query, transactionDataByCredentialId)
                 }
 
             // Each query's `multiple` flag, forwarded to [ProcessedDcqlRequest]
@@ -154,7 +187,8 @@ class DcqlRequestProcessor(
      * `claim_sets` first-match semantics (DCQL §6.4.1).
      */
     private suspend fun findMatchesForQuery(
-        query: CredentialQuery
+        query: CredentialQuery,
+        transactionDataByCredentialId: Map<String, List<TransactionDataJson>>
     ): List<CredentialPresentmentSetOptionMemberMatch> {
         val dcqlQuery: DcqlCredentialQuery = query.toDcqlCredentialQuery()
         val candidates: List<IssuedDocument> = candidateDocumentsForQuery(query)
@@ -190,7 +224,8 @@ class DcqlRequestProcessor(
                 credential = secureCred,
                 claims = matchedClaims,
                 source = CredentialMatchSourceOpenID4VP(credentialQuery = dcqlQuery),
-                transactionData = emptyList(),
+                //transactionData = emptyList(),
+                transactionData = transactionDataByCredentialId[query.id.value].orEmpty(),
             )
         }
     }
