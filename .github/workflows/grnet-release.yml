@@ -1,0 +1,92 @@
+# GRNET fork: publish a release of the three artifacts to a Maven repository on
+# GitHub Pages, https://grnet.github.io/eudi-lib-android-wallet-core/maven/.
+# See .github/README.md.
+#
+# Runs on a tag v<VERSION_NAME>, e.g. v0.30.2-grnet.1. The repository lives in
+# the gh-pages branch; each release adds its version next to the earlier ones.
+
+name: GRNET release
+
+on:
+  push:
+    tags:
+      - 'v*-grnet.*'
+
+concurrency:
+  group: grnet-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish to GitHub Pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+
+    env:
+      GROUP_PATH: eu/europa/ec/eudi
+
+    steps:
+      - name: Check out the tag
+        uses: actions/checkout@v4
+
+      - name: Check the tag matches VERSION_NAME
+        id: version
+        run: |
+          set -euo pipefail
+          version=$(grep -E '^VERSION_NAME=' gradle.properties | cut -d= -f2)
+          if [[ "v${version}" != "${GITHUB_REF_NAME}" ]]; then
+            echo "::error::tag ${GITHUB_REF_NAME} does not match VERSION_NAME=${version} in gradle.properties"
+            exit 1
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Check out gh-pages
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null; then
+            git clone --quiet --branch gh-pages --depth 1 \
+              "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" pages
+          else
+            mkdir pages
+            git -C pages init --quiet --initial-branch gh-pages
+            git -C pages remote add origin \
+              "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          fi
+          # Published versions are never replaced: whoever downloaded one has it cached.
+          if [[ -d "pages/maven/${GROUP_PATH}/eudi-lib-android-wallet-core/${{ steps.version.outputs.version }}" ]]; then
+            echo "::error::${{ steps.version.outputs.version }} is already published. Bump VERSION_NAME."
+            exit 1
+          fi
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Unsigned: signatures are a Maven Central requirement, and the signing
+      # keys are upstream's.
+      - name: Publish
+        env:
+          GRNET_MAVEN_DIR: ${{ github.workspace }}/pages/maven
+        run: |
+          ./gradlew --init-script .github/grnet/pages-repository.init.gradle \
+            publishAllPublicationsToGrnetPagesRepository \
+            -PRELEASE_SIGNING_ENABLED=false -PsignAllPublications=false \
+            --no-configuration-cache
+
+      - name: Push gh-pages
+        run: |
+          set -euo pipefail
+          cd pages
+          touch .nojekyll
+          git add -A
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit --quiet -m "Publish ${{ steps.version.outputs.version }}"
+          git push --quiet origin gh-pages
+          echo "published ${{ steps.version.outputs.version }}:"
+          find maven -path "*/${{ steps.version.outputs.version }}/*.aar" | sed 's/^/  /'

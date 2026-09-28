@@ -1,0 +1,16 @@
+// GRNET fork: adds a Maven repository in a local directory to every project
+// that publishes, so the release workflow can publish there without changing
+// the build. The directory is the gh-pages checkout: see
+// .github/workflows/grnet-release.yml.
+allprojects {
+    plugins.withId("maven-publish") {
+        publishing {
+            repositories {
+                maven {
+                    name = "grnetPages"
+                    url = uri(System.getenv("GRNET_MAVEN_DIR") ?: "${rootDir}/build/grnet-maven")
+                }
+            }
+        }
+    }
+}
