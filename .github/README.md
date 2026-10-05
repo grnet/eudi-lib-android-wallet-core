@@ -15,7 +15,7 @@ Upstream's own README is [at the root](../README.md).
 
 ## What differs from upstream
 
-Nothing functional yet. `grnet` is upstream `v0.30.2` with its own version
+Nothing functional yet. `grnet` is upstream `v0.31.0` with its own version
 number and a release workflow.
 
 These changes are candidates, and each would come as its own change and
@@ -23,8 +23,9 @@ release:
 
 - relaxing HAIP's encrypted-response requirement, for verifiers using plain
   `direct_post` (on `v0.30.2-grnet`)
-- presenting OpenID4VP transaction data with SD-JWT VC credentials (on
-  `v0.29.0-grnet`, to be ported)
+
+Presenting OpenID4VP transaction data with SD-JWT VC credentials, once a
+candidate here (on `v0.29.0-grnet`), is in upstream from `v0.31.0`.
 
 ## Versions
 
