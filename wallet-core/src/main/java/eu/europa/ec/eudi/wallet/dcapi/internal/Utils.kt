@@ -68,8 +68,19 @@ internal fun Context.getDefaultPrivilegedUserAgents(): String {
     }
 }
 
+// GRNET fork: 144 px rather than 48, the size of a 48 dp icon on an xxhdpi screen, so that the
+// credential selector does not enlarge it.
+private const val ICON_SIZE_PX = 144
+
 internal fun Bitmap.getIconBytes(): ByteArray {
-    val scaledIcon = this.scale(48, 48)
+    // GRNET fork: bilinear filtering reads only the 2x2 source pixels nearest each target pixel,
+    // so a single step that shrinks by more than half skips lines and leaves speckles. Halve the
+    // logo until it is within 2x of the icon size, then scale it the rest of the way.
+    var scaledIcon = this
+    while (scaledIcon.width >= ICON_SIZE_PX * 2 && scaledIcon.height >= ICON_SIZE_PX * 2) {
+        scaledIcon = scaledIcon.scale(scaledIcon.width / 2, scaledIcon.height / 2)
+    }
+    scaledIcon = scaledIcon.scale(ICON_SIZE_PX, ICON_SIZE_PX)
     return ByteArrayOutputStream().use { stream ->
         scaledIcon.compress(Bitmap.CompressFormat.PNG, 100, stream)
         stream.toByteArray()
