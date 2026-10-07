@@ -1,0 +1,255 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "eu.europa.ec.eudi",
+    "module": "eudi-lib-android-wallet-document-manager",
+    "version": "0.31.0-grnet.2",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.5.0"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseVariantMavenApiPublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "org.multipaz",
+          "module": "multipaz",
+          "version": {
+            "requires": "0.101.0"
+          },
+          "excludes": [
+            {
+              "group": "org.bouncycastle",
+              "module": "*"
+            },
+            {
+              "group": "io.ktor",
+              "module": "*"
+            }
+          ]
+        },
+        {
+          "group": "eu.europa.ec.eudi",
+          "module": "eudi-lib-jvm-sdjwt-kt",
+          "version": {
+            "requires": "0.20.2"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.2.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "eudi-lib-android-wallet-document-manager-0.31.0-grnet.2.aar",
+          "url": "eudi-lib-android-wallet-document-manager-0.31.0-grnet.2.aar",
+          "size": 251357,
+          "sha512": "dbfff960a7e81f32aa3da2e8f33773867f7383dfdf5206cb87da71917bada34f0edd123ee597e016fded9228ffa9fe594c28e2f764016b8db02a1834ba52221b",
+          "sha256": "46e38d05b1bcf6d8e1767be343064be73776ebc42be31c490c9be1d61bda392c",
+          "sha1": "39c6bb13872936d4a924e79a38ee1c0f3a4b0253",
+          "md5": "7956699f3a1e0097ecf2debd98f9c6da"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantMavenRuntimePublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-io-core",
+          "version": {
+            "requires": "0.7.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-io-bytestring",
+          "version": {
+            "requires": "0.7.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-serialization-json",
+          "version": {
+            "requires": "1.9.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          }
+        },
+        {
+          "group": "com.upokecenter",
+          "module": "cbor",
+          "version": {
+            "requires": "4.5.6"
+          }
+        },
+        {
+          "group": "com.augustcellars.cose",
+          "module": "cose-java",
+          "version": {
+            "requires": "1.1.0"
+          }
+        },
+        {
+          "group": "io.ktor",
+          "module": "ktor-client-core",
+          "version": {
+            "requires": "3.3.0"
+          }
+        },
+        {
+          "group": "io.ktor",
+          "module": "ktor-client-content-negotiation",
+          "version": {
+            "requires": "3.3.0"
+          }
+        },
+        {
+          "group": "io.ktor",
+          "module": "ktor-client-serialization",
+          "version": {
+            "requires": "3.3.0"
+          }
+        },
+        {
+          "group": "io.ktor",
+          "module": "ktor-serialization-kotlinx-json",
+          "version": {
+            "requires": "3.3.0"
+          }
+        },
+        {
+          "group": "com.nimbusds",
+          "module": "nimbus-jose-jwt",
+          "version": {
+            "requires": "9.47"
+          }
+        },
+        {
+          "group": "org.bouncycastle",
+          "module": "bcprov-jdk18on",
+          "version": {
+            "requires": "1.78.1"
+          }
+        },
+        {
+          "group": "org.bouncycastle",
+          "module": "bcpkix-jdk18on",
+          "version": {
+            "requires": "1.78.1"
+          }
+        },
+        {
+          "group": "org.multipaz",
+          "module": "multipaz",
+          "version": {
+            "requires": "0.101.0"
+          },
+          "excludes": [
+            {
+              "group": "org.bouncycastle",
+              "module": "*"
+            },
+            {
+              "group": "io.ktor",
+              "module": "*"
+            }
+          ]
+        },
+        {
+          "group": "eu.europa.ec.eudi",
+          "module": "eudi-lib-jvm-sdjwt-kt",
+          "version": {
+            "requires": "0.20.2"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.2.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "eudi-lib-android-wallet-document-manager-0.31.0-grnet.2.aar",
+          "url": "eudi-lib-android-wallet-document-manager-0.31.0-grnet.2.aar",
+          "size": 251357,
+          "sha512": "dbfff960a7e81f32aa3da2e8f33773867f7383dfdf5206cb87da71917bada34f0edd123ee597e016fded9228ffa9fe594c28e2f764016b8db02a1834ba52221b",
+          "sha256": "46e38d05b1bcf6d8e1767be343064be73776ebc42be31c490c9be1d61bda392c",
+          "sha1": "39c6bb13872936d4a924e79a38ee1c0f3a4b0253",
+          "md5": "7956699f3a1e0097ecf2debd98f9c6da"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantMavenSourcePublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "eudi-lib-android-wallet-document-manager-0.31.0-grnet.2-sources.jar",
+          "url": "eudi-lib-android-wallet-document-manager-0.31.0-grnet.2-sources.jar",
+          "size": 52884,
+          "sha512": "4770cc19ab95ab900a7eb2f272ec194572cec02c8f3722c823fbb5a8bf38fe00007b03642488d4b71367d624396e774ffeb75e617d13c3c4b6dcd095fb1dd41d",
+          "sha256": "d77682260d4a1b966271c788f25ef98ace2dbdcb154bd1ede71c84172427bab0",
+          "sha1": "de849f580bf9b930be12359386bdcd8e7b4d33bc",
+          "md5": "e29da5598ef61d7ea1844c820f3b57c3"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantMavenJavaDocPublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "eudi-lib-android-wallet-document-manager-0.31.0-grnet.2-javadoc.jar",
+          "url": "eudi-lib-android-wallet-document-manager-0.31.0-grnet.2-javadoc.jar",
+          "size": 1322582,
+          "sha512": "4d779acc1b7220137bf2b0c48990992c6bb7e35fea16732e24311757681072173349571fa79b8934c63c33f5b31ca3a90149a9c415f54265a7e5db09c7f38dbc",
+          "sha256": "9943644981cecae4a9667b7ed7a5453980e9b184ef12f7fd646d64bf890f7e8a",
+          "sha1": "813f6c4888d68491b72410b16428bdcc81ee75d7",
+          "md5": "a58ddf6fba1e589d206eb13d162372a5"
+        }
+      ]
+    }
+  ]
+}
