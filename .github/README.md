@@ -15,10 +15,18 @@ Upstream's own README is [at the root](../README.md).
 
 ## What differs from upstream
 
-Nothing functional yet. `grnet` is upstream `v0.31.0` with its own version
-number and a release workflow.
+`grnet` is upstream `v0.31.0` with its own version number, a release
+workflow, and these changes:
 
-These changes are candidates, and each would come as its own change and
+- **Sharper credential icons in the Android credential selector**
+  (`0.31.0-grnet.2`, `wallet-core/.../dcapi/internal/Utils.kt`). Upstream
+  shrinks each issuer logo to 48×48 px in a single bilinear step, which skips
+  most of a large logo's thin lines and leaves it speckled, and Android then
+  enlarges the 48 px result to about 100 px. The icon is now 144 px, and a logo
+  more than twice that size is halved repeatedly before the last step. A
+  candidate to send upstream.
+
+These are further candidates, and each would come as its own change and
 release:
 
 - relaxing HAIP's encrypted-response requirement, for verifiers using plain
