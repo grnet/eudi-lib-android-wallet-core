@@ -26,6 +26,7 @@ import eu.europa.ec.eudi.wallet.document.DocumentId
 import eu.europa.ec.eudi.wallet.document.DocumentManager
 import eu.europa.ec.eudi.wallet.document.UnsignedDocument
 import eu.europa.ec.eudi.wallet.internal.d
+import eu.europa.ec.eudi.wallet.internal.e
 import eu.europa.ec.eudi.wallet.issue.openid4vci.IssueEvent.Companion.failure
 import eu.europa.ec.eudi.wallet.issue.openid4vci.OpenId4VciManager.Companion.TAG
 import eu.europa.ec.eudi.wallet.issue.openid4vci.reissue.IssuanceMetadata
@@ -128,6 +129,16 @@ internal class ProcessResponse(
                     credential = credentials.first().first,
                     logger = logger,
                 )
+
+                // GRNET fork: the credential response's display array, e.g. the card display of
+                // a WE BUILD SCA-Card (DPC). Stored first, so that what reacts to the document
+                // being stored, such as the Digital Credentials API registration, sees it. It is
+                // for display only, so a failure to store it does not fail the issuance.
+                outcome.display?.takeIf { it.isNotEmpty() }?.let { display ->
+                    documentManager.setCredentialDisplay(unsignedDocument.id, display)
+                        .kotlinResult
+                        .onFailure { logger?.e(TAG, "Failed to store the credential display", it) }
+                }
 
                 val issuedDocument = documentManager.storeIssuedDocument(
                     unsignedDocument, credentials

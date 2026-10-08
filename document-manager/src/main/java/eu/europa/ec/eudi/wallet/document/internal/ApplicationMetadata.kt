@@ -120,6 +120,15 @@ internal interface ApplicationMetadata : AbstractDocumentMetadata {
      */
     fun setKeyAttestation(keyAttestation: String)
 
+    /**
+     * GRNET fork: replaces the issuer metadata, e.g. to add the credential response's display.
+     *
+     * Note: The caller is responsible for persisting changes via [Document.edit].
+     *
+     * @param issuerMetadata the new issuer metadata
+     */
+    fun setIssuerMetadata(issuerMetadata: IssuerMetadata)
+
     companion object {
         /**
          * The factory for [ApplicationMetadata].
@@ -266,6 +275,15 @@ internal class ApplicationMetadataImpl private constructor(
     override fun setKeyAttestation(keyAttestation: String) {
         data = data.copy(
             keyAttestation = keyAttestation
+        )
+    }
+
+    /**
+     * GRNET fork: replaces the issuer metadata.
+     */
+    override fun setIssuerMetadata(issuerMetadata: IssuerMetadata) {
+        data = data.copy(
+            issuerMetadata = issuerMetadata
         )
     }
 

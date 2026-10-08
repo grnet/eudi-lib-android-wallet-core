@@ -41,6 +41,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import org.multipaz.cbor.Cbor
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.Base64
 
 /**
  * Registers the wallet's issued documents with the Credential Manager, for the Digital Credential
@@ -70,8 +71,9 @@ internal class DCAPICredentialRegistry private constructor(
 
     companion object {
         private const val TAG = "DCAPICredentialRegistry"
-        // Digital Credentials API matcher from the multipaz project (v0.101.0), bundled
-        // unmodified — byte-identical to the one multipaz ships in `multipaz-dcapi-android`.
+        // Digital Credentials API matcher from the multipaz project (v0.101.0).
+        // GRNET fork: built from wallet-core/matcher, multipaz's source with a patch that shows a
+        // TS12 card payment in the selector as a payment, see the README there.
         // Keep it in step with the `multipaz` version in libs.versions.toml: this binary parses
         // the credential database written by [toCredentialBytes] and has to understand the same
         // wire identifiers (e.g. the SD-JWT VC format string) as the verifiers of its era.
@@ -130,14 +132,21 @@ internal class DCAPICredentialRegistry private constructor(
         ): ByteArray {
             val credentialsArray = CBORObject.NewArray()
             forEach { document ->
+                // GRNET fork: a payment card is shown by its own name, last four digits and card
+                // art, from the display meta-data its issuer delivered with it.
+                val card = CardDisplay.of(document)
+                val cardArtBytes = card?.cardArtUrl?.let {
+                    getImageBytes(it, ioDispatcher, logger)
+                }
+
                 // Issuer-provided logo, or an empty placeholder when none is available.
-                val bitmapBytes = document.issuerMetadata?.let {
+                val bitmapBytes = cardArtBytes ?: document.issuerMetadata?.let {
                     getBitmapBytes(it, context, ioDispatcher, logger)
                 } ?: byteArrayOf(0)
 
                 val credential = CBORObject.NewMap().apply {
-                    Add(TITLE, document.name)
-                    Add(SUBTITLE, context.getAppName())
+                    Add(TITLE, card?.title ?: document.name)
+                    Add(SUBTITLE, card?.subtitle ?: context.getAppName())
                     Add(BITMAP, bitmapBytes)
                 }
 
@@ -296,6 +305,32 @@ internal class DCAPICredentialRegistry private constructor(
             } catch (_: Exception) {
                 byteArrayOf(0)
             }
+        }
+
+        /**
+         * GRNET fork: an image for the selector from an HTTPS URL or an RFC 2397 `data:` URL with
+         * base64 content, the two forms the WE BUILD rulebook allows for card art, or `null` if
+         * it cannot be read.
+         */
+        private suspend fun getImageBytes(
+            url: String,
+            ioDispatcher: CoroutineDispatcher,
+            logger: Logger?
+        ): ByteArray? = try {
+            val imageBytes = when {
+                url.startsWith("data:") -> {
+                    val (header, content) = url.removePrefix("data:").split(",", limit = 2)
+                    require(header.endsWith(";base64")) { "Only base64 data URLs are supported" }
+                    Base64.getDecoder().decode(content)
+                }
+
+                url.startsWith("https://") -> getLogo(URL(url), ioDispatcher, logger)
+                else -> null
+            }
+            imageBytes?.let { BitmapFactory.decodeByteArray(it, 0, it.size)?.getIconBytes() }
+        } catch (e: Exception) {
+            logger?.e(TAG, "Failed to read the card art", e)
+            null
         }
 
         private suspend fun getLogo(

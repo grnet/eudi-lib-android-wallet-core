@@ -19,6 +19,7 @@ package eu.europa.ec.eudi.wallet.document
 import eu.europa.ec.eudi.wallet.document.credential.IssuerProvidedCredential
 import eu.europa.ec.eudi.wallet.document.format.DocumentFormat
 import eu.europa.ec.eudi.wallet.document.metadata.IssuerMetadata
+import kotlinx.serialization.json.JsonObject
 import org.multipaz.securearea.SecureAreaRepository
 import org.multipaz.storage.Storage
 
@@ -143,6 +144,23 @@ interface DocumentManager {
         unsignedDocument: UnsignedDocument,
         issuerProvidedData: List<IssuerProvidedCredential>
     ): Outcome<IssuedDocument>
+
+    /**
+     * GRNET fork: stores the display array of the credential response with the document's issuer
+     * metadata, as [IssuerMetadata.credentialDisplay].
+     * Call it before [storeIssuedDocument], so that whatever reacts to the document being stored
+     * sees it. A document without issuer metadata is left unchanged.
+     *
+     * The default implementation stores nothing, for document managers that keep no metadata.
+     *
+     * @param documentId the document the credentials were issued for
+     * @param credentialDisplay the credential response's display array, as received
+     * @return an [Outcome] that fails if the document does not exist or cannot be updated
+     */
+    fun setCredentialDisplay(
+        documentId: DocumentId,
+        credentialDisplay: List<JsonObject>
+    ): Outcome<Unit> = Outcome.success(Unit)
 
     /**
      * Stores an unsigned document for deferred issuance processing.

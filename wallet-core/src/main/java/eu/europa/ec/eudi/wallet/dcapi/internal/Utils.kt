@@ -37,6 +37,7 @@ import org.multipaz.presentment.CredentialPresentmentSetOptionMember
 import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 import java.util.Locale
+import kotlin.math.roundToInt
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -73,14 +74,19 @@ internal fun Context.getDefaultPrivilegedUserAgents(): String {
 private const val ICON_SIZE_PX = 144
 
 internal fun Bitmap.getIconBytes(): ByteArray {
+    // GRNET fork: the longer side becomes the icon size and the shape is kept, so that card art,
+    // which is wider than it is tall, is not squashed. A square logo is scaled as before.
+    val scale = ICON_SIZE_PX.toFloat() / maxOf(width, height)
+    val targetWidth = (width * scale).roundToInt().coerceAtLeast(1)
+    val targetHeight = (height * scale).roundToInt().coerceAtLeast(1)
     // GRNET fork: bilinear filtering reads only the 2x2 source pixels nearest each target pixel,
     // so a single step that shrinks by more than half skips lines and leaves speckles. Halve the
     // logo until it is within 2x of the icon size, then scale it the rest of the way.
     var scaledIcon = this
-    while (scaledIcon.width >= ICON_SIZE_PX * 2 && scaledIcon.height >= ICON_SIZE_PX * 2) {
+    while (scaledIcon.width >= targetWidth * 2 && scaledIcon.height >= targetHeight * 2) {
         scaledIcon = scaledIcon.scale(scaledIcon.width / 2, scaledIcon.height / 2)
     }
-    scaledIcon = scaledIcon.scale(ICON_SIZE_PX, ICON_SIZE_PX)
+    scaledIcon = scaledIcon.scale(targetWidth, targetHeight)
     return ByteArrayOutputStream().use { stream ->
         scaledIcon.compress(Bitmap.CompressFormat.PNG, 100, stream)
         stream.toByteArray()
