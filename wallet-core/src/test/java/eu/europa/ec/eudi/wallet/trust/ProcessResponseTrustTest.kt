@@ -76,6 +76,8 @@ class ProcessResponseTrustTest {
         return mockk<SubmissionOutcome.Success> {
             every { credentials } returns listOf(issuedCredential)
             every { selectedCredentialReusePolicy } returns null
+            // GRNET fork: the credential response's display array.
+            every { display } returns null
         }
     }
 

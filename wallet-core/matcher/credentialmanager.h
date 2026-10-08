@@ -36,6 +36,13 @@ __attribute__((import_module("credman_v2"), import_name("AddPaymentEntryToSet"))
 #endif
 void AddPaymentEntryToSet(char *cred_id, char *merchant_name, char *payment_method_name, char *payment_method_subtitle, char* payment_method_icon, size_t payment_method_icon_len, char *transaction_amount, char* bank_icon, size_t bank_icon_len, char* payment_provider_icon, size_t payment_provider_icon_len, char *metadata, char *set_id, int set_index);
 
+// GRNET fork: as AddPaymentEntryToSet, with additional_info. The variant CMWallet's matcher
+// calls, so the one known to render the payment sheet.
+#if defined(__wasm__)
+__attribute__((import_module("credman_v2"), import_name("AddPaymentEntryToSetV2")))
+#endif
+void AddPaymentEntryToSetV2(char *cred_id, char *merchant_name, char *payment_method_name, char *payment_method_subtitle, char* payment_method_icon, size_t payment_method_icon_len, char *transaction_amount, char* bank_icon, size_t bank_icon_len, char* payment_provider_icon, size_t payment_provider_icon_len, char *additional_info, char *metadata, char *set_id, int set_index);
+
 #if defined(__wasm__)
 __attribute__((import_module("credman"), import_name("AddStringIdEntry")))
 #endif

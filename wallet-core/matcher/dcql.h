@@ -94,6 +94,9 @@ struct DcqlQuery {
 struct DcqlResponseCredentialSetOptionMemberMatch {
     Credential* credential;
     std::vector<Claim*> claims;
+    // GRNET fork: the id of the credential query this matched, which transaction_data's
+    // credential_ids refer to.
+    std::string credentialQueryId;
 };
 
 struct DcqlResponseCredentialSetOptionMember {

@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <optional>
 
 extern "C" {
 #include "cJSON.h"
@@ -22,8 +23,19 @@ struct VcRequestedClaim {
     std::string claimName;
 };
 
+// GRNET fork: a TS12 card payment, transaction_data of type urn:eudi:sca:payment:1.
+struct PaymentTransaction {
+    // The DCQL credential query ids it binds to.
+    std::vector<std::string> credentialIds;
+    std::string merchantName;
+    // As shown to the user, e.g. "38.00 EUR".
+    std::string amount;
+};
+
 struct Request {
     std::string protocol;
+    // GRNET fork: a payment the request asks the user to approve, if any.
+    std::optional<PaymentTransaction> payment;
     Request(std::string protocol_) : protocol(protocol_) {}
     virtual ~Request() = default;
 };

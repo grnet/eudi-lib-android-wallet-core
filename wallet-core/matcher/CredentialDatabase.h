@@ -105,6 +105,8 @@ struct CredentialDatabase {
 struct CredentialPresentment {
     Credential* credential;
     std::vector<Claim*> claims;
+    // GRNET fork: the id of the DCQL credential query this answers, if any.
+    std::string credentialQueryId;
 };
 
 struct CombinationElement {

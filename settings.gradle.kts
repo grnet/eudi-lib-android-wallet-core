@@ -37,6 +37,22 @@ dependencyResolutionManagement {
             url = uri("https://central.sonatype.com/repository/maven-snapshots/")
             mavenContent { snapshotsOnly() }
         }
+        // GRNET fork: GRNET's releases of the OpenID4VCI library (versions *-grnet.N) come
+        // from its own Maven repository, and only from there. See .github/README.md.
+        exclusiveContent {
+            forRepository {
+                maven {
+                    name = "grnetOpenId4Vci"
+                    url = uri(
+                        providers.gradleProperty("grnetOpenId4VciMavenUrl")
+                            .getOrElse("https://grnet.github.io/eudi-lib-jvm-openid4vci-kt/maven/")
+                    )
+                }
+            }
+            filter {
+                includeVersionByRegex("eu\\.europa\\.ec\\.eudi", "eudi-lib-jvm-openid4vci-kt", ".*-grnet\\..*")
+            }
+        }
     }
 }
 

@@ -28,6 +28,7 @@ import eu.europa.ec.eudi.wallet.document.internal.applicationMetadata
 import eu.europa.ec.eudi.wallet.document.internal.documentManagerId
 import eu.europa.ec.eudi.wallet.document.internal.toDocument
 import eu.europa.ec.eudi.wallet.document.metadata.IssuerMetadata
+import kotlinx.serialization.json.JsonObject
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.bytestring.ByteString
@@ -256,6 +257,33 @@ class DocumentManagerImpl(
                 }
                 Outcome.success(identityDocument.toDocument())
             } catch (e: Throwable) {
+                Outcome.failure(e)
+            }
+        }
+    }
+
+    /**
+     * GRNET fork: stores the credential response's display array with the document's issuer
+     * metadata. A document without issuer metadata is left unchanged.
+     */
+    override fun setCredentialDisplay(
+        documentId: DocumentId,
+        credentialDisplay: List<JsonObject>
+    ): Outcome<Unit> {
+        return runBlocking {
+            try {
+                val identityDocument = documentStore.lookupDocument(documentId)
+                    ?: throw IllegalArgumentException("Document with $documentId not found")
+                val issuerMetadata = identityDocument.applicationMetadata.issuerMetadata
+                if (issuerMetadata != null) {
+                    identityDocument.edit {
+                        metadata = identityDocument.applicationMetadata.apply {
+                            setIssuerMetadata(issuerMetadata.copy(credentialDisplay = credentialDisplay))
+                        }
+                    }
+                }
+                Outcome.success(Unit)
+            } catch (e: Exception) {
                 Outcome.failure(e)
             }
         }

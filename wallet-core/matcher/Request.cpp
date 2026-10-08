@@ -539,6 +539,93 @@ std::vector<Combination> MdocRequest::getCredentialCombinations(const Credential
     return {};
 }
 
+// GRNET fork: the amount as the wallet shows it elsewhere, e.g. "38.00 EUR": the ISO 4217 code
+// after the number, padded to the currency's minor units, and never rounded.
+static std::string formatPaymentAmount(const std::string& number, const std::string& currency) {
+    static const std::set<std::string> noMinorUnits = {
+            "BIF", "CLP", "DJF", "GNF", "ISK", "JPY", "KMF", "KRW", "PYG", "RWF",
+            "UGX", "UYI", "VND", "VUV", "XAF", "XOF", "XPF"
+    };
+    static const std::set<std::string> threeMinorUnits = {
+            "BHD", "IQD", "JOD", "KWD", "LYD", "OMR", "TND"
+    };
+    size_t minorUnits = 2;
+    if (noMinorUnits.count(currency) > 0) {
+        minorUnits = 0;
+    } else if (threeMinorUnits.count(currency) > 0) {
+        minorUnits = 3;
+    }
+    std::string digits = number;
+    if (digits.find_first_of("eE") == std::string::npos) {
+        size_t dot = digits.find('.');
+        size_t decimals = dot == std::string::npos ? 0 : digits.size() - dot - 1;
+        if (decimals < minorUnits) {
+            if (dot == std::string::npos) {
+                digits += ".";
+            }
+            digits.append(minorUnits - decimals, '0');
+        }
+    }
+    return digits + " " + currency;
+}
+
+// GRNET fork: the TS12 card payment in an OpenID4VP request's transaction_data, if there is
+// exactly one and it has what the payment sheet shows: the payee's name, a numeric amount and a
+// currency. Anything else leaves the request's credentials shown as usual.
+static std::optional<PaymentTransaction> parsePaymentTransaction(cJSON* transactionData) {
+    if (!cJSON_IsArray(transactionData)) {
+        return std::nullopt;
+    }
+    std::optional<PaymentTransaction> found;
+    cJSON* item;
+    cJSON_ArrayForEach(item, transactionData) {
+        if (!cJSON_IsString(item)) {
+            continue;
+        }
+        std::string json = base64UrlDecode(cJSON_GetStringValue(item));
+        cJSON* td = cJSON_Parse(json.c_str());
+        if (td == nullptr) {
+            continue;
+        }
+        // Freed on every path; what is kept is copied into std::string first.
+        std::unique_ptr<cJSON, decltype(&cJSON_Delete)> tdOwner(td, cJSON_Delete);
+        cJSON* type = cJSON_GetObjectItem(td, "type");
+        if (!cJSON_IsString(type) || std::string(cJSON_GetStringValue(type)) != "urn:eudi:sca:payment:1") {
+            continue;
+        }
+        if (found.has_value()) {
+            LOG("More than one payment in transaction_data, not showing a payment");
+            return std::nullopt;
+        }
+        cJSON* payload = cJSON_GetObjectItem(td, "payload");
+        cJSON* payee = cJSON_GetObjectItem(payload, "payee");
+        cJSON* payeeName = cJSON_GetObjectItem(payee, "name");
+        cJSON* amount = cJSON_GetObjectItem(payload, "amount");
+        cJSON* currency = cJSON_GetObjectItem(payload, "currency");
+        cJSON* credentialIds = cJSON_GetObjectItem(td, "credential_ids");
+        if (!cJSON_IsString(payeeName) || std::string(cJSON_GetStringValue(payeeName)).empty() ||
+                !cJSON_IsNumber(amount) ||
+                !cJSON_IsString(currency) || std::string(cJSON_GetStringValue(currency)).empty() ||
+                !cJSON_IsArray(credentialIds)) {
+            LOG("Payment in transaction_data lacks payee name, amount or currency");
+            return std::nullopt;
+        }
+        PaymentTransaction payment;
+        cJSON* id;
+        cJSON_ArrayForEach(id, credentialIds) {
+            if (cJSON_IsString(id)) {
+                payment.credentialIds.push_back(cJSON_GetStringValue(id));
+            }
+        }
+        payment.merchantName = cJSON_GetStringValue(payeeName);
+        char* amountStr = cJSON_PrintUnformatted(amount);
+        payment.amount = formatPaymentAmount(amountStr, cJSON_GetStringValue(currency));
+        free(amountStr);
+        found = payment;
+    }
+    return found;
+}
+
 std::unique_ptr<OpenID4VPRequest> OpenID4VPRequest::parseOpenID4VP(cJSON* dataJson, std::string protocolName) {
     std::string docTypeValue = "";
     auto dataElements = std::vector<MdocRequestDataElement>();
@@ -630,8 +717,10 @@ std::unique_ptr<OpenID4VPRequest> OpenID4VPRequest::parseOpenID4VP(cJSON* dataJs
     }
     // dcqlQuery.log();
 
-    return std::unique_ptr<OpenID4VPRequest> { new OpenID4VPRequest(
+    auto openId4VpRequest = std::unique_ptr<OpenID4VPRequest> { new OpenID4VPRequest(
             protocolName,
             dcqlQuery
     )};
+    openId4VpRequest->payment = parsePaymentTransaction(cJSON_GetObjectItem(dataJson, "transaction_data"));
+    return openId4VpRequest;
 }

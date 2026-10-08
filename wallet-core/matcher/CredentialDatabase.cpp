@@ -267,6 +267,32 @@ void Combination::addToCredmanPicker(const Request& request) const {
                 icon = malloc(credential->bitmap.size());
                 memcpy(icon, credential->bitmap.data(), credential->bitmap.size());
             }
+            // GRNET fork: the credential a TS12 payment binds to is shown as the payment, the
+            // payee and the amount, with the credential's icon as the card art. Same entry id, so
+            // the wallet sees the same selection.
+            const auto& payment = request.payment;
+            if (credmanRuntimeVersion >= 2 && payment.has_value() &&
+                    std::find(payment->credentialIds.begin(), payment->credentialIds.end(),
+                              match.credentialQueryId) != payment->credentialIds.end()) {
+                ::AddPaymentEntryToSetV2(
+                        entryId,
+                        strdup(payment->merchantName.c_str()),
+                        strdup(credential->title.c_str()),
+                        strdup(credential->subtitle.c_str()),
+                        (char *) icon,
+                        credential->bitmap.size(),
+                        strdup(payment->amount.c_str()),
+                        nullptr,
+                        0,
+                        nullptr,
+                        0,
+                        nullptr,
+                        nullptr,
+                        setId,
+                        setIndex
+                );
+                continue;
+            }
             if (credmanRuntimeVersion >= 2) {
                 ::AddEntryToSet(
                         entryId,
