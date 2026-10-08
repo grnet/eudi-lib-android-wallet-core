@@ -1,0 +1,359 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "eu.europa.ec.eudi",
+    "module": "eudi-lib-android-wallet-core",
+    "version": "0.31.0-grnet.3",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.5.0"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseVariantMavenApiPublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "eu.europa.ec.eudi",
+          "module": "eudi-lib-android-wallet-document-manager",
+          "version": {
+            "requires": "0.31.0-grnet.3"
+          }
+        },
+        {
+          "group": "eu.europa.ec.eudi",
+          "module": "eudi-lib-android-iso18013-data-transfer",
+          "version": {
+            "requires": "0.31.0-grnet.3"
+          }
+        },
+        {
+          "group": "eu.europa.ec.eudi",
+          "module": "eudi-lib-jvm-openid4vci-kt",
+          "version": {
+            "requires": "0.14.1-grnet.1"
+          }
+        },
+        {
+          "group": "org.multipaz",
+          "module": "multipaz-android",
+          "version": {
+            "requires": "0.101.0"
+          },
+          "excludes": [
+            {
+              "group": "org.bouncycastle",
+              "module": "*"
+            },
+            {
+              "group": "io.ktor",
+              "module": "*"
+            }
+          ]
+        },
+        {
+          "group": "eu.europa.ec.eudi",
+          "module": "eudi-lib-jvm-sdjwt-kt",
+          "version": {
+            "requires": "0.20.2"
+          }
+        },
+        {
+          "group": "eu.europa.ec.eudi",
+          "module": "eudi-lib-kmp-statium-android",
+          "version": {
+            "requires": "0.5.2"
+          }
+        },
+        {
+          "group": "eu.europa.ec.eudi",
+          "module": "etsi-1196x2-consultation",
+          "version": {
+            "requires": "0.4.0-alpha.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.2.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "eudi-lib-android-wallet-core-0.31.0-grnet.3.aar",
+          "url": "eudi-lib-android-wallet-core-0.31.0-grnet.3.aar",
+          "size": 2927662,
+          "sha512": "eb346035ca98ac8ab92cdac78816ee9755832540ecd8116f260282d10f91fc2683d959085dea8b6377808258667fcd3ab3619c12801990b2aca2bf9fca93d924",
+          "sha256": "8aad743ebd172d4cd3af411b760b691863e2ec566effe8f7e31396ad364eebc2",
+          "sha1": "7883ff91c94ced387a3279a37c541b598a82613d",
+          "md5": "06036e09f0a061bdc321f95df902b8e2"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantMavenRuntimePublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-parcelize-runtime",
+          "version": {
+            "requires": "2.2.21"
+          }
+        },
+        {
+          "group": "io.ktor",
+          "module": "ktor-client-android",
+          "version": {
+            "requires": "3.3.0"
+          }
+        },
+        {
+          "group": "org.multipaz",
+          "module": "multipaz-longfellow-android",
+          "version": {
+            "requires": "0.101.0"
+          }
+        },
+        {
+          "group": "androidx.appcompat",
+          "module": "appcompat",
+          "version": {
+            "requires": "1.7.1"
+          }
+        },
+        {
+          "group": "com.nimbusds",
+          "module": "oauth2-oidc-sdk",
+          "version": {
+            "requires": "11.20.1"
+          }
+        },
+        {
+          "group": "eu.europa.ec.eudi",
+          "module": "eudi-lib-jvm-openid4vp-kt",
+          "version": {
+            "requires": "0.16.2"
+          },
+          "excludes": [
+            {
+              "group": "org.bouncycastle",
+              "module": "*"
+            }
+          ]
+        },
+        {
+          "group": "eu.europa.ec.eudi",
+          "module": "etsi-119602-consultation",
+          "version": {
+            "requires": "0.4.0-alpha.3"
+          }
+        },
+        {
+          "group": "androidx.credentials",
+          "module": "credentials",
+          "version": {
+            "requires": "1.6.0"
+          }
+        },
+        {
+          "group": "androidx.credentials.registry",
+          "module": "registry-provider",
+          "version": {
+            "requires": "1.0.0-alpha04"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-io-core",
+          "version": {
+            "requires": "0.7.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-io-bytestring",
+          "version": {
+            "requires": "0.7.0"
+          }
+        },
+        {
+          "group": "co.nstant.in",
+          "module": "cbor",
+          "version": {
+            "requires": "0.9"
+          }
+        },
+        {
+          "group": "com.upokecenter",
+          "module": "cbor",
+          "version": {
+            "requires": "4.5.6"
+          }
+        },
+        {
+          "group": "com.augustcellars.cose",
+          "module": "cose-java",
+          "version": {
+            "requires": "1.1.0"
+          }
+        },
+        {
+          "group": "io.ktor",
+          "module": "ktor-client-logging",
+          "version": {
+            "requires": "3.3.0"
+          }
+        },
+        {
+          "group": "org.bouncycastle",
+          "module": "bcprov-jdk18on",
+          "version": {
+            "requires": "1.78.1"
+          }
+        },
+        {
+          "group": "org.bouncycastle",
+          "module": "bcpkix-jdk18on",
+          "version": {
+            "requires": "1.78.1"
+          }
+        },
+        {
+          "group": "eu.europa.ec.eudi",
+          "module": "eudi-lib-android-wallet-document-manager",
+          "version": {
+            "requires": "0.31.0-grnet.3"
+          }
+        },
+        {
+          "group": "eu.europa.ec.eudi",
+          "module": "eudi-lib-android-iso18013-data-transfer",
+          "version": {
+            "requires": "0.31.0-grnet.3"
+          }
+        },
+        {
+          "group": "eu.europa.ec.eudi",
+          "module": "eudi-lib-jvm-openid4vci-kt",
+          "version": {
+            "requires": "0.14.1-grnet.1"
+          }
+        },
+        {
+          "group": "org.multipaz",
+          "module": "multipaz-android",
+          "version": {
+            "requires": "0.101.0"
+          },
+          "excludes": [
+            {
+              "group": "org.bouncycastle",
+              "module": "*"
+            },
+            {
+              "group": "io.ktor",
+              "module": "*"
+            }
+          ]
+        },
+        {
+          "group": "eu.europa.ec.eudi",
+          "module": "eudi-lib-jvm-sdjwt-kt",
+          "version": {
+            "requires": "0.20.2"
+          }
+        },
+        {
+          "group": "eu.europa.ec.eudi",
+          "module": "eudi-lib-kmp-statium-android",
+          "version": {
+            "requires": "0.5.2"
+          }
+        },
+        {
+          "group": "eu.europa.ec.eudi",
+          "module": "etsi-1196x2-consultation",
+          "version": {
+            "requires": "0.4.0-alpha.3"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.2.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "eudi-lib-android-wallet-core-0.31.0-grnet.3.aar",
+          "url": "eudi-lib-android-wallet-core-0.31.0-grnet.3.aar",
+          "size": 2927662,
+          "sha512": "eb346035ca98ac8ab92cdac78816ee9755832540ecd8116f260282d10f91fc2683d959085dea8b6377808258667fcd3ab3619c12801990b2aca2bf9fca93d924",
+          "sha256": "8aad743ebd172d4cd3af411b760b691863e2ec566effe8f7e31396ad364eebc2",
+          "sha1": "7883ff91c94ced387a3279a37c541b598a82613d",
+          "md5": "06036e09f0a061bdc321f95df902b8e2"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantMavenSourcePublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "eudi-lib-android-wallet-core-0.31.0-grnet.3-sources.jar",
+          "url": "eudi-lib-android-wallet-core-0.31.0-grnet.3-sources.jar",
+          "size": 365867,
+          "sha512": "5f66e7c91f0a815169b843875bf3fe8a35f6c14b65ad07dcbe8a868356b795dd8d9121d9160c10d485acd72b597e8417b42f20b337fe0d56777ebec76469db3b",
+          "sha256": "fc0b4ebc0fb1457f4eb3fb11d1b40b4736026cd5e20a61f2ac35801f753a1126",
+          "sha1": "7d87e928995a0d20155a7b4bdbd7e639b3e7a86f",
+          "md5": "1b16ff0861e41f98d996e2fc0c90b208"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantMavenJavaDocPublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "eudi-lib-android-wallet-core-0.31.0-grnet.3-javadoc.jar",
+          "url": "eudi-lib-android-wallet-core-0.31.0-grnet.3-javadoc.jar",
+          "size": 4727874,
+          "sha512": "6a8c81d6e68e95df5ea7c51f75bad4c91a20cda3b2919bc6699b49dad23e45de9d94d80f8a23ff1878b1a2e00aedde8cef4a699baf836325b530ca756d4868d3",
+          "sha256": "ca0110591e73d1d90b9ebe0553c3bbcfb2eb95405a272c07dcddc72842496292",
+          "sha1": "3c8dcee47834ad2af1a6be37749df14bb2dfad1c",
+          "md5": "7e1d3f9318323bf6d34a26f4c7d2aa26"
+        }
+      ]
+    }
+  ]
+}
