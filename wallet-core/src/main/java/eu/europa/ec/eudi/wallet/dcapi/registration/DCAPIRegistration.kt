@@ -20,6 +20,8 @@ package eu.europa.ec.eudi.wallet.dcapi.registration
 import android.content.Context
 import androidx.credentials.registry.provider.ClearCredentialRegistryRequest
 import androidx.credentials.registry.provider.RegistryManager
+import eu.europa.ec.eudi.wallet.card.CardArtStore
+import eu.europa.ec.eudi.wallet.card.CardDisplay
 import eu.europa.ec.eudi.wallet.dcapi.DCAPIProtocol
 import eu.europa.ec.eudi.wallet.document.DocumentManager
 import eu.europa.ec.eudi.wallet.document.IssuedDocument
@@ -71,8 +73,18 @@ class DefaultDCAPIRegistration(
                 // OS picker. mdoc is presentable over org-iso-mdoc and/or OpenID4VP, so it is
                 // always registered.
                 val openId4VpEnabled = supportedProtocols.any { it.isOpenId4Vp }
-                val issuedDocuments = documentManager.getDocuments()
+                val allIssuedDocuments = documentManager.getDocuments()
                     .filterIsInstance<IssuedDocument>()
+                // GRNET fork: this runs whenever a document is stored or deleted, so it is where
+                // the card art of deleted payment cards is deleted from the device as well.
+                runCatching {
+                    CardArtStore(context, logger, ioDispatcher).retainOnly(
+                        allIssuedDocuments.flatMap { document ->
+                            CardDisplay.of(document)?.cardArt?.variants.orEmpty().map { it.second }
+                        }
+                    )
+                }.onFailure { logger?.e(TAG, "Failed to delete unused card art", it) }
+                val issuedDocuments = allIssuedDocuments
                     .filter { document ->
                         when (document.format) {
                             is MsoMdocFormat -> true
