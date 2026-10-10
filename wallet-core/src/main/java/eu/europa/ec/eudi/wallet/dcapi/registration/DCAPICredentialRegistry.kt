@@ -101,6 +101,8 @@ internal class DCAPICredentialRegistry private constructor(
          * @param protocols the protocols to advertise for the registered documents.
          * @param logger optional logger.
          * @param ioDispatcher dispatcher used for network I/O (logo download) and asset reading.
+         * @param credentialTitles GRNET fork: titles for the selector by `docType` or `vct`,
+         *   instead of the document's name; a payment card's own title comes first.
          */
         suspend operator fun invoke(
             context: Context,
@@ -109,8 +111,11 @@ internal class DCAPICredentialRegistry private constructor(
             protocols: List<DCAPIProtocol>,
             logger: Logger? = null,
             ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+            credentialTitles: Map<String, String> = emptyMap(),
         ): List<DCAPICredentialRegistry> = withContext(ioDispatcher) {
-            val credentials = documents.toCredentialBytes(context, logger, ioDispatcher, protocols)
+            val credentials = documents.toCredentialBytes(
+                context, logger, ioDispatcher, protocols, credentialTitles
+            )
             val matcher = context.getMatcher(DEFAULT_MATCHER_FILE)
             listOf(DCAPICredentialRegistry(id, credentials, matcher))
         }
@@ -129,7 +134,8 @@ internal class DCAPICredentialRegistry private constructor(
             context: Context,
             logger: Logger?,
             ioDispatcher: CoroutineDispatcher,
-            protocols: List<DCAPIProtocol>
+            protocols: List<DCAPIProtocol>,
+            credentialTitles: Map<String, String> = emptyMap(),
         ): ByteArray {
             val credentialsArray = CBORObject.NewArray()
             val cardArtStore = CardArtStore(context, logger, ioDispatcher)
@@ -148,7 +154,7 @@ internal class DCAPICredentialRegistry private constructor(
                 } ?: byteArrayOf(0)
 
                 val credential = CBORObject.NewMap().apply {
-                    Add(TITLE, card?.title ?: document.name)
+                    Add(TITLE, card?.title ?: document.selectorTitle(credentialTitles))
                     Add(SUBTITLE, card?.maskedNumber ?: context.getAppName())
                     Add(BITMAP, bitmapBytes)
                 }
@@ -177,6 +183,18 @@ internal class DCAPICredentialRegistry private constructor(
                 Add(CREDENTIALS, credentialsArray)
             }
             return database.EncodeToBytes()
+        }
+
+        /**
+         * GRNET fork: the title of [this] document in the selector: the one [credentialTitles] gives
+         * its type (`docType` or `vct`), else its name.
+         */
+        internal fun IssuedDocument.selectorTitle(credentialTitles: Map<String, String>): String {
+            val type = when (val format = format) {
+                is MsoMdocFormat -> format.docType
+                is SdJwtVcFormat -> format.vct
+            }
+            return credentialTitles[type] ?: name
         }
 
         /** Encodes a list of protocols as a CBOR array of their on-the-wire identifiers. */
