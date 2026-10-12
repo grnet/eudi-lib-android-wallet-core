@@ -49,6 +49,15 @@ workflow, and these changes:
     an HTTPS or `data:` URL, with its shape kept. A display whose network
     differs from the signed `network` claim is ignored for the claim (IR-04).
     Other credentials are shown as before.
+- **Payment cards for the wallet's own screens** (`0.31.0-grnet.4`,
+  `wallet-core/.../card`). `CardDisplay` is public, so the app shows a card as
+  the selector does, and it carries the rest of the `card` object: the product
+  type, the network's and the issuer's names and logos, and each image in its
+  `DEFAULT`, `LIGHT` and `DARK` variants, picked by theme as §4 asks. Images
+  other than HTTPS or `data:` URLs are left out. `CardArtStore` downloads each
+  card image once and keeps it on the device, with a generic `User-Agent`, no
+  cookies and no HTTP cache, for the selector and the app alike; the
+  registration deletes the images of cards that are gone.
 
 Known limitations of these changes:
 
@@ -62,10 +71,9 @@ Known limitations of these changes:
   the claims its query requests.
 - **Deferred issuance keeps no card display.** The OpenID4VCI library passes
   the display array through for immediate issuance only.
-- **Card art is downloaded on every registration**, which runs whenever a
-  document is stored or deleted, without a cache, and with the platform's
-  default request headers. The rulebook asks wallets to avoid identifying
-  headers when fetching images; caching the icon at issuance would do both.
+- **A stored card image is never refreshed.** An issuer that changes a card's
+  art behind the same URL is not seen until the card is reissued with a new
+  URL. Card images are stored by URL, so a new URL is a new image.
 - **The amount in the selector is reprinted from a double**, so an amount
   beyond 15 significant digits, or in exponent form, can read differently
   from the request's literal. Ordinary amounts such as `4.70` are exact.

@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package eu.europa.ec.eudi.wallet.dcapi.registration
+package eu.europa.ec.eudi.wallet.card
 
 import eu.europa.ec.eudi.wallet.document.IssuedDocument
+import eu.europa.ec.eudi.wallet.document.UnsignedDocument
 import eu.europa.ec.eudi.wallet.document.format.SdJwtVcClaim
 import eu.europa.ec.eudi.wallet.document.format.SdJwtVcData
 import eu.europa.ec.eudi.wallet.document.metadata.IssuerMetadata
@@ -48,7 +49,7 @@ class CardDisplayTest {
             }
         }
         val data = mockk<SdJwtVcData> { every { claims } returns listOfNotNull(networkClaim) }
-        return mockk {
+        return mockk<IssuedDocument> {
             every { issuerMetadata } returns metadata
             every { this@mockk.data } returns data
         }
@@ -57,22 +58,47 @@ class CardDisplayTest {
     private val sample = """
         [{
           "card": {
+            "type": { "code": "CREDIT", "label": "Credit card" },
             "alias": "Gold Mastercard",
             "last_four": "1234",
             "card_art": [
               { "theme": "DARK", "image_url": "https://bank.example/dark.png" },
-              { "theme": "DEFAULT", "image_url": "https://bank.example/card.png" }
+              { "theme": "DEFAULT", "image_url": "https://bank.example/card.png" },
+              { "theme": "LIGHT", "image_url": "http://bank.example/insecure.png" }
             ],
+            "issuer": { "branding": { "name": "Partner Bank" } },
             "network_branding": { "network": "mastercard", "branding": { "name": "Mastercard" } }
           }
         }]
     """.trimIndent()
 
     @Test
-    fun `the card is shown by its alias, last four digits and default card art`() {
+    fun `the card is shown by its alias, last four digits, type, network, issuer and card art`() {
         val card = CardDisplay.of(document("mastercard", sample))
 
-        assertEquals(CardDisplay("Gold Mastercard", "•••• 1234", "https://bank.example/card.png"), card)
+        assertEquals("Gold Mastercard", card?.title)
+        assertEquals("1234", card?.lastFour)
+        assertEquals("•••• 1234", card?.maskedNumber)
+        assertEquals(CardDisplay.Type("CREDIT", "Credit card"), card?.type)
+        assertEquals("Mastercard", card?.networkName)
+        assertEquals("Partner Bank", card?.issuerName)
+    }
+
+    @Test
+    fun `the card art matches the theme, else is the default one, and is never plain HTTP`() {
+        val cardArt = CardDisplay.of(document("mastercard", sample))!!.cardArt
+
+        assertEquals("https://bank.example/dark.png", cardArt.forTheme(darkTheme = true))
+        assertEquals("https://bank.example/card.png", cardArt.forTheme(darkTheme = false))
+        assertEquals("https://bank.example/card.png", cardArt.anyTheme)
+    }
+
+    @Test
+    fun `a data URL is a valid image`() {
+        val dataUrl = "data:image/png;base64,iVBORw0KGgo="
+        val card = CardDisplay.of(document("mastercard", sample.replace("https://bank.example/card.png", dataUrl)))
+
+        assertEquals(dataUrl, card?.cardArt?.anyTheme)
     }
 
     @Test
@@ -86,7 +112,7 @@ class CardDisplayTest {
     fun `a display whose network differs from the signed claim falls back to the claim (IR-04)`() {
         val card = CardDisplay.of(document("visa", sample))
 
-        assertEquals(CardDisplay("Visa", subtitle = null, cardArtUrl = null), card)
+        assertEquals(CardDisplay("Visa", networkName = "Visa"), card)
     }
 
     @Test
@@ -99,19 +125,24 @@ class CardDisplayTest {
 
         val card = CardDisplay.of(document("mastercard", withoutBranding))
 
-        assertEquals(CardDisplay("Gold Mastercard", "•••• 1234", "https://bank.example/card.png"), card)
+        assertEquals("Gold Mastercard", card?.title)
+        assertEquals("•••• 1234", card?.maskedNumber)
+        assertEquals("https://bank.example/card.png", card?.cardArt?.anyTheme)
+        assertEquals("Mastercard", card?.networkName)
     }
 
     @Test
     fun `last_four that is not four digits is not shown`() {
         val card = CardDisplay.of(document("mastercard", sample.replace("\"1234\"", "\"12a4\"")))
 
-        assertNull(card?.subtitle)
+        assertNull(card?.lastFour)
+        assertNull(card?.maskedNumber)
     }
 
     @Test
     fun `a document without a card display has none`() {
         assertNull(CardDisplay.of(document("mastercard", credentialDisplay = null)))
         assertNull(CardDisplay.of(document("mastercard", """[{ "name": "PID" }]""")))
+        assertNull(CardDisplay.of(mockk<UnsignedDocument>()))
     }
 }
