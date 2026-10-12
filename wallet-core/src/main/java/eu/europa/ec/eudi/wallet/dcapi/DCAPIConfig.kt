@@ -25,6 +25,8 @@ package eu.europa.ec.eudi.wallet.dcapi
  * will be used, see file in assets/privilegedUserAgents.json
  * @property supportedProtocols the DC API protocols this wallet will process; mandatory (non-empty)
  * when [enabled].
+ * @property credentialTitles GRNET fork: the titles to show for credentials in the Android
+ * credential selector, keyed by `docType` or `vct`, instead of the document's name.
  */
 class DCAPIConfig private constructor(private val builder: Builder) {
 
@@ -41,6 +43,14 @@ class DCAPIConfig private constructor(private val builder: Builder) {
      */
     val supportedProtocols: Set<DCAPIProtocol>
         get() = builder.supportedProtocols
+
+    /**
+     * GRNET fork: the titles to show for credentials in the Android credential selector, keyed by
+     * `docType` or `vct`, instead of the document's name, such as "Person Identification Data"
+     * for a PID the issuer calls "PID (SD-JWT VC)". A payment card's own title comes first.
+     */
+    val credentialTitles: Map<String, String>
+        get() = builder.credentialTitles
 
     /**
      * Builder for [DCAPIConfig].
@@ -81,6 +91,18 @@ class DCAPIConfig private constructor(private val builder: Builder) {
          */
         fun withSupportedProtocols(vararg protocols: DCAPIProtocol) = apply {
             this.supportedProtocols = protocols.toSet()
+        }
+
+        var credentialTitles: Map<String, String> = emptyMap()
+            private set
+
+        /**
+         * GRNET fork: sets the titles to show for credentials in the Android credential selector,
+         * keyed by `docType` or `vct`. See [DCAPIConfig.credentialTitles].
+         * @param titles the titles
+         */
+        fun withCredentialTitles(titles: Map<String, String>) = apply {
+            this.credentialTitles = titles
         }
 
         fun build(): DCAPIConfig {

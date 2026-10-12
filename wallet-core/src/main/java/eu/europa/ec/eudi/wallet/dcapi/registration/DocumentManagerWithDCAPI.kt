@@ -39,13 +39,16 @@ import org.multipaz.context.applicationContext
  * @property logger optional logger for logging events.
  * @property dcapiRegistration the registration used to register documents; when not provided,
  *   [DefaultDCAPIRegistration] is used.
+ * @property credentialTitles GRNET fork: titles for the selector, see
+ *   [eu.europa.ec.eudi.wallet.dcapi.DCAPIConfig.credentialTitles].
  */
 
 internal class DocumentManagerWithDCAPI(
     private val delegate: DocumentManager,
     private val supportedProtocols: List<DCAPIProtocol>,
     private val logger: Logger? = null,
-    private val dcapiRegistration: DCAPIRegistration? = null
+    private val dcapiRegistration: DCAPIRegistration? = null,
+    private val credentialTitles: Map<String, String> = emptyMap(),
     ) : DocumentManager by delegate {
 
     private val registration: DCAPIRegistration by lazy {
@@ -53,7 +56,8 @@ internal class DocumentManagerWithDCAPI(
             context = applicationContext,
             documentManager = delegate,
             supportedProtocols = supportedProtocols,
-            logger = logger
+            logger = logger,
+            credentialTitles = credentialTitles,
         )
     }
 

@@ -50,6 +50,8 @@ import kotlinx.coroutines.withContext
  *   formats are registered.
  * @property logger optional logger.
  * @property ioDispatcher coroutine dispatcher used for I/O bound work.
+ * @property credentialTitles GRNET fork: titles for the selector, see
+ *   [eu.europa.ec.eudi.wallet.dcapi.DCAPIConfig.credentialTitles].
  */
 
 class DefaultDCAPIRegistration(
@@ -57,7 +59,8 @@ class DefaultDCAPIRegistration(
     private val documentManager: DocumentManager,
     private val supportedProtocols: List<DCAPIProtocol>,
     private var logger: Logger? = null,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val credentialTitles: Map<String, String> = emptyMap(),
 ) : DCAPIRegistration {
 
     private val registryManager: RegistryManager by lazy {
@@ -110,7 +113,8 @@ class DefaultDCAPIRegistration(
                     id = REGISTRY_ID,
                     logger = logger,
                     ioDispatcher = ioDispatcher,
-                    protocols = supportedProtocols
+                    protocols = supportedProtocols,
+                    credentialTitles = credentialTitles,
                 )
 
                 logger?.d(TAG, "Registering ${registries.size} DC API registr(ies)...")

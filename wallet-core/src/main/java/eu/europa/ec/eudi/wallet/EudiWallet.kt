@@ -434,7 +434,8 @@ interface EudiWallet : DocumentManager, PresentationManager, DocumentStatusResol
                                 delegate = manager,
                                 dcapiRegistration = dcapiRegistration,
                                 supportedProtocols = dcapiCfg.supportedProtocols.toList(),
-                                logger = loggerToUse
+                                logger = loggerToUse,
+                                credentialTitles = dcapiCfg.credentialTitles,
                             )
                         } else manager
                     }

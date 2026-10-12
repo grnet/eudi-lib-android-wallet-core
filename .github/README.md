@@ -58,6 +58,11 @@ workflow, and these changes:
   card image once and keeps it on the device, with a generic `User-Agent`, no
   cookies and no HTTP cache, for the selector and the app alike; the
   registration deletes the images of cards that are gone.
+- **Titles in Android's selector** (`0.31.0-grnet.5`). The new
+  `DCAPIConfig.Builder.withCredentialTitles` maps a `docType` or `vct` to the
+  title the credential selector shows instead of the document's name, so an
+  app can show every PID as "Person Identification Data", whatever its format
+  and whatever the issuer calls it. A payment card's own title comes first.
 
 Known limitations of these changes:
 
