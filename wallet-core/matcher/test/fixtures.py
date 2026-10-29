@@ -57,6 +57,26 @@ PID = credential("doc-pid", "PID", PID_VCT,
                  {"given_name": "Maria", "family_name": "Papadopoulou"}, b"pid-icon")
 
 
+# A PID with an array claim, which wallet-core registers under the array's own name only.
+PID_FULL = credential("doc-pid", "PID", PID_VCT,
+                      {"given_name": "Maria", "family_name": "Papadopoulou", "birthdate": "1980-10-24",
+                       "nationalities": "[GR]"}, b"pid-icon")
+
+
+def pid_request(nationalities_path):
+    """A PID request as the reference verifier makes one, the array claim asked for by path."""
+    return {
+        "response_type": "vp_token",
+        "response_mode": "dc_api.jwt",
+        "nonce": "n-0S6_WzA2Mj",
+        "dcql_query": {"credentials": [
+            {"id": "query_0", "format": "dc+sd-jwt", "meta": {"vct_values": [PID_VCT]},
+             "claims": [{"path": ["family_name"]}, {"path": ["given_name"]}, {"path": ["birthdate"]},
+                        {"path": nationalities_path}]},
+        ]},
+    }
+
+
 def card(n):
     return credential(f"doc-dpc-{n}", f"Card {n}", DPC_VCT,
                       {"credential_id": f"c{n}", "network": "mastercard", "card_id": f"k{n}"},
@@ -111,6 +131,11 @@ def write(directory):
         "string_amount.json": unsigned(openid4vp([payment("42.50")])),
         "two_payments.json": unsigned(openid4vp([payment(1), payment(2)])),
         "payment_for_pid.json": unsigned(openid4vp([payment(5, credential_ids=["pid"])])),
+        "db_pid_full.cbor": cbor({"protocols": [], "credentials": [PID_FULL]}),
+        "pid_all_elements.json": signed(pid_request(["nationalities", None])),
+        "pid_one_element.json": signed(pid_request(["nationalities", 0])),
+        "pid_array.json": signed(pid_request(["nationalities"])),
+        "pid_missing_claim.json": signed(pid_request(["place_of_birth", None])),
     }
     for name, content in files.items():
         mode = "wb" if isinstance(content, bytes) else "w"
