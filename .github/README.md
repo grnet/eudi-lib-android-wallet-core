@@ -15,8 +15,9 @@ Upstream's own README is [at the root](../README.md).
 
 ## What differs from upstream
 
-`grnet` is upstream `v0.31.0` with its own version number, a release
-workflow, and these changes:
+`grnet` is upstream `v0.31.1` (from `0.31.1-grnet.1`; `v0.31.0` before) with
+its own version number, a release workflow, and these changes, each listed
+with the release that brought it:
 
 - **Sharper credential icons in the Android credential selector**
   (`0.31.0-grnet.2`, `wallet-core/.../dcapi/internal/Utils.kt`). Upstream

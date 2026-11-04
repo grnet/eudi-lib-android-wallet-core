@@ -33,8 +33,10 @@ import eu.europa.ec.eudi.wallet.internal.d
 import eu.europa.ec.eudi.wallet.logging.Logger
 import io.ktor.client.HttpClient
 import kotlinx.io.files.Path
+import java.security.cert.PKIXRevocationChecker
 import java.security.cert.TrustAnchor
 import java.security.cert.X509Certificate
+import java.util.EnumSet
 
 /**
  * Internal provider that constructs the full ETSI LoTE trust pipeline from an [EtsiTrustConfig].
@@ -72,7 +74,7 @@ internal class EtsiTrustProvider(
             "cacheTtl=${config.cacheTtl}, " +
             "fileCacheExpiration=${config.fileCacheExpiration}, " +
             "relaxProfiles=${config.relaxCertificateProfiles}, " +
-            "relaxPkixRevocation=${config.relaxPkixRevocation}")
+            "pkixRevocationPolicy=${config.pkixRevocationPolicy}")
 
         // HTTP client (use injected factory or default)
         val httpClient = ktorHttpClientFactory?.invoke() ?: HttpClient()
@@ -99,20 +101,38 @@ internal class EtsiTrustProvider(
         } else {
             SupportedLists.eu()
         }
-        val provisionTrustAnchors = if (config.relaxPkixRevocation) {
-            ProvisionTrustAnchorsFromLoTEs.eudiwJvm(
-                loadLoTEAndPointers = loadLoTEAndPointers,
-                svcTypePerCtx = svcTypePerCtx,
-                pkix = ValidateCertificateChainUsingPKIXJvm(
-                    customization = { isRevocationEnabled = false }
-                ),
+
+        // Map revocation policy to PKIX validator
+        val pkix = when (config.pkixRevocationPolicy) {
+            PkixRevocationPolicy.Disabled -> ValidateCertificateChainUsingPKIXJvm(
+                customization = { isRevocationEnabled = false }
             )
-        } else {
-            ProvisionTrustAnchorsFromLoTEs.eudiwJvm(
-                loadLoTEAndPointers = loadLoTEAndPointers,
-                svcTypePerCtx = svcTypePerCtx,
-            )
+            PkixRevocationPolicy.SoftFail -> ValidateCertificateChainUsingPKIXJvm.withRevocationChecker {
+                options = EnumSet.of(
+                    PKIXRevocationChecker.Option.PREFER_CRLS,
+                    PKIXRevocationChecker.Option.NO_FALLBACK,
+                    PKIXRevocationChecker.Option.SOFT_FAIL
+                )
+            }
+            PkixRevocationPolicy.CRLPriority -> ValidateCertificateChainUsingPKIXJvm.withRevocationChecker {
+                options = EnumSet.of(PKIXRevocationChecker.Option.PREFER_CRLS)
+            }
+            PkixRevocationPolicy.CRLOnly -> ValidateCertificateChainUsingPKIXJvm.withRevocationChecker {
+                options = EnumSet.of(
+                    PKIXRevocationChecker.Option.PREFER_CRLS,
+                    PKIXRevocationChecker.Option.NO_FALLBACK
+                )
+            }
+            PkixRevocationPolicy.OCSPPriority -> ValidateCertificateChainUsingPKIXJvm.withRevocationChecker {
+                // No options = Java default (OCSP first, CRL fallback)
+            }
         }
+
+        val provisionTrustAnchors = ProvisionTrustAnchorsFromLoTEs.eudiwJvm(
+            loadLoTEAndPointers = loadLoTEAndPointers,
+            svcTypePerCtx = svcTypePerCtx,
+            pkix = pkix,
+        )
 
         // Cached chain trust validator
         isChainTrusted = provisionTrustAnchors.cached(

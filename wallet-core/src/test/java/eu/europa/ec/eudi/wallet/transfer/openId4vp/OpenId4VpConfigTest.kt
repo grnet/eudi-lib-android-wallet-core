@@ -21,7 +21,10 @@ import eu.europa.ec.eudi.wallet.transfer.openId4vp.transactionData.QesApprovalTr
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import eu.europa.ec.eudi.openid4vp.ResponseMode
+import eu.europa.ec.eudi.wallet.internal.makeOpenId4VPConfig
 import eu.europa.ec.eudi.wallet.transfer.openId4vp.OpenId4VpConfig.EncryptionPolicy
+import eu.europa.ec.eudi.wallet.transfer.openId4vp.OpenId4VpConfig.ErrorDispatchPolicy
+import io.mockk.mockk
 import org.junit.Test
 import java.net.URI
 import java.net.URL
@@ -251,6 +254,40 @@ class OpenId4VpConfigTest {
 
         assertIs<JsonObject>(payload)
         assertEquals("42.00", payload.getValue("amount").jsonPrimitive.content)
+    }
+
+    @Test
+    fun `Builder default errorDispatchPolicy is OnlyAuthenticatedClients`() {
+        val config = defaultBuilder().build()
+        assertEquals(ErrorDispatchPolicy.OnlyAuthenticatedClients, config.errorDispatchPolicy)
+    }
+
+    @Test
+    fun `Builder withErrorDispatchPolicy overrides the default`() {
+        val config = defaultBuilder()
+            .withErrorDispatchPolicy(ErrorDispatchPolicy.AllClients)
+            .build()
+
+        assertEquals(ErrorDispatchPolicy.AllClients, config.errorDispatchPolicy)
+    }
+
+    @Test
+    fun `makeOpenId4VPConfig forwards the errorDispatchPolicy to the OpenID4VP library`() {
+        val expected = mapOf(
+            ErrorDispatchPolicy.AllClients to
+                eu.europa.ec.eudi.openid4vp.ErrorDispatchPolicy.AllClients,
+            ErrorDispatchPolicy.OnlyAuthenticatedClients to
+                eu.europa.ec.eudi.openid4vp.ErrorDispatchPolicy.OnlyAuthenticatedClients,
+        )
+        assertEquals(ErrorDispatchPolicy.entries.toSet(), expected.keys)
+
+        expected.forEach { (policy, upstream) ->
+            val config = makeOpenId4VPConfig(
+                config = defaultBuilder().withErrorDispatchPolicy(policy).build(),
+                trust = mockk<OpenId4VpReaderTrust>()
+            )
+            assertEquals(upstream, config.errorDispatchPolicy)
+        }
     }
 
     private fun defaultBuilder(): OpenId4VpConfig.Builder = OpenId4VpConfig.Builder()

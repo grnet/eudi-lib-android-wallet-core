@@ -182,7 +182,7 @@ file.
 
 ```groovy
 dependencies {
-    implementation "eu.europa.ec.eudi:eudi-lib-android-wallet-core:0.31.0"
+    implementation "eu.europa.ec.eudi:eudi-lib-android-wallet-core:0.31.1"
     // required when using the built-in AndroidKeystoreSecureArea implementation provided by the library
     // for user authentication with biometrics
     implementation "androidx.biometric:biometric-ktx:1.2.0-alpha05"
@@ -240,6 +240,9 @@ val config = EudiWalletConfig()
         // default is EnforceIfPresent
         enforceIfPresent()
     }
+    // set the trust anchors (CA certificates) of the providers of relying-party registration
+    // certificates (see REGISTRATION_CERTIFICATE.md)
+    .configureWrpRegistrationTrust(listOf(registrationCertificateProviderCa))
     // configure the OpenId4Vci service
     .configureOpenId4Vci {
         withIssuerUrl("https://issuer.com")
@@ -375,6 +378,11 @@ val config = EudiWalletConfig {
 > the configured trust store, the document will be excluded from the response when using
 > `enforceIfPresent()` or `alwaysRequire()`. To allow presentations to verifiers whose
 > certificates are not in the trust store, use `doNotEnforce()`.
+
+> **Note:** The reader authentication trust is not used for relying-party registration
+> certificates. Without `configureEtsiTrust`, call `configureWrpRegistrationTrust(...)` or
+> `configureWrpRegistrationPolicy(WrpRegistrationPolicy.Disabled)`; otherwise building the wallet
+> fails. See [REGISTRATION_CERTIFICATE.md](REGISTRATION_CERTIFICATE.md#trust-for-registration-certificates).
 
 #### WalletKeyManager Configuration
 This interface is responsible for managing Attestation Keys used during Attestation Based Client Authentication with OpenId4Vci.
@@ -760,7 +768,7 @@ declare it explicitly:
 
 ```groovy
 dependencies {
-    implementation "eu.europa.ec.eudi:eudi-lib-android-wallet-core:0.31.0"
+    implementation "eu.europa.ec.eudi:eudi-lib-android-wallet-core:0.31.1"
     // Required explicitly — Uri type is not transitive from wallet-core
     implementation "eu.europa.ec.eudi:eudi-lib-kmp-etsi-119602-consultation:${VERSION}"
 }
@@ -798,7 +806,7 @@ val config = EudiWalletConfig {
         fileCacheExpiration(24.hours)    // how long LoTE files are cached on disk
         cacheTtl(20.minutes)             // how long trust anchors are cached in memory
         relaxCertificateProfiles()       // strip endEntityProfile constraints (DEV/testing)
-        relaxPkixRevocation()            // disable PKIX revocation checks (DEV/testing)
+        // pkixRevocationPolicy(PkixRevocationPolicy.CRLPriority)  // default if omitted
         // jwtSignatureVerifier(custom)  // override built-in JWT verifier
         // loteConstraints(...)          // control LoTE pointer following
     }
@@ -827,10 +835,32 @@ val config = EudiWalletConfig {
 >
 > **DEV/Testing knobs:** `relaxCertificateProfiles()` strips `endEntityProfile` constraints
 > from all provider types, useful when DEV certificates don't fully conform to ETSI profile
-> requirements. `relaxPkixRevocation()` disables CRL/OCSP revocation checks when endpoints
-> are not available in the test environment. When `relaxPkixRevocation()` is **not** called,
-> PKIX revocation checking is enabled and strict — certificate chain validation will fail if
-> a certificate is revoked or if the revocation status cannot be determined.
+> requirements.
+>
+> **PKIX Revocation Policy:** Controls how CRL and OCSP revocation data is validated during
+> certificate chain verification. **When `pkixRevocationPolicy()` is not explicitly called,
+> the default is `PkixRevocationPolicy.CRLPriority`.** Available policies:
+>
+> - **`PkixRevocationPolicy.CRLPriority`** (default) — CRL primary, OCSP fallback.
+>   Attempts CRL first; if CRL fetch succeeds, uses CRL. If CRL fetch fails, falls back to
+>   OCSP. If both fail, validation fails.
+>
+> - **`PkixRevocationPolicy.CRLOnly`** — CRL only, no OCSP fallback.
+>   Only uses Certificate Revocation Lists (CRL) for revocation checking. If CRL fetch fails,
+>   validation fails (no OCSP fallback).
+>
+> - **`PkixRevocationPolicy.OCSPPriority`** — OCSP primary, CRL fallback.
+>   Java's default behavior. Attempts OCSP first; if OCSP succeeds, uses OCSP. If OCSP fails,
+>   falls back to CRL. If both fail, validation fails.
+>
+> - **`PkixRevocationPolicy.SoftFail`** — CRL only, no OCSP fallback, tolerating network
+>   errors. The revocation check succeeds if the CRL cannot be obtained because of a network
+>   error. A revoked certificate is still rejected.
+>
+> - **`PkixRevocationPolicy.Disabled`** — No revocation checking.
+>   Equivalent to deprecated `relaxPkixRevocation()`.
+>
+> **IMPORTANT:** Only HTTPS CRL/OCSP endpoints are supported. HTTP endpoints are not supported.
 
 #### Advanced: Manual Trust Anchor Resolution (LoTE)
 
@@ -879,6 +909,10 @@ val config = EudiWalletConfig {
         trustSource(isChainTrusted)
         enforceIfPresent()
     }
+    // registration certificates take their trust from configureEtsiTrust or from these methods,
+    // not from trustSource(); see REGISTRATION_CERTIFICATE.md
+    configureWrpRegistrationTrust(registrarCas)
+    configureIssuerRegistrationTrust(registrarCas)
 }
 
 // On shutdown:
@@ -948,6 +982,11 @@ configureIssuerTrust {
 - **`policy`** -- configures how the wallet acts on trust results (see below).
 - **`preferSignedMetadata()`** / **`ignoreSignedMetadata()`** -- relaxes the default
   `RequireSigned` metadata policy (see [Signed Issuer Metadata Verification](#signed-issuer-metadata-verification)).
+
+Without `configureEtsiTrust`, a wallet that requires signed issuer metadata (the default) with
+`IssuerRegistrationPolicy.Enabled` (the default) also needs `configureIssuerRegistrationTrust(...)` or
+`configureIssuerRegistrationPolicy(IssuerRegistrationPolicy.Disabled)`; otherwise building the wallet
+fails. See [REGISTRATION_CERTIFICATE.md](REGISTRATION_CERTIFICATE.md#trust-for-registration-certificates).
 
 ##### Trust Policies
 
@@ -1171,9 +1210,11 @@ The available revocation policies are:
 | `RevocationPolicy.NoCheck` | No revocation checking is performed. |
 
 > **Note:** `RevocationPolicy` only applies to the static certificate-based
-> `trustedCertificates()` overloads. When using ETSI/LoTE-based trust (via
-> `configureEtsiTrust`), revocation checking is controlled by `relaxPkixRevocation()` inside
-> the `configureEtsiTrust` block instead.
+> `trustedCertificates()` overloads and to `configureWrpRegistrationTrust` /
+> `configureIssuerRegistrationTrust`. When using ETSI/LoTE-based trust (via
+> `configureEtsiTrust`), revocation checking is controlled by `pkixRevocationPolicy()` inside
+> the `configureEtsiTrust` block instead. See [Trusted Lists](#trusted-lists) for details on
+> `PkixRevocationPolicy` options.
 
 For advanced use cases requiring a specific verification context, create an
 `EtsiReaderTrustStore` explicitly and pass it as a custom trust source:
@@ -1235,7 +1276,7 @@ val config = EudiWalletConfig {
         ))
         // DEV/testing relaxations (omit in production):
         // relaxCertificateProfiles()
-        // relaxPkixRevocation()
+        // pkixRevocationPolicy(PkixRevocationPolicy.Disabled)  // or SoftFail for testing
     }
 
     // Issuer trust — trust source + classifications inherited from configureEtsiTrust
