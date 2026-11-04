@@ -1,7 +1,7 @@
 # GRNET fork
 
 This is multipaz's matcher, `multipaz-dcapi/src/androidMain/matcher` at multipaz
-`0.101.0`, with one change. Built unchanged with WASI SDK 20, it is
+`0.101.0`, with two changes. Built unchanged with WASI SDK 20, it is
 byte-identical to the `identitycredentialmatcher.wasm` that wallet-core and
 multipaz ship.
 
@@ -23,6 +23,13 @@ A request without such a payment is matched exactly as upstream does.
 - Each match now carries the id of the DCQL credential query it answers,
   which `credential_ids` refers to (`dcql.h`, `dcql.cpp`).
 
+**The second change: a claim path into an array matches the array.** A
+DCQL claim path element that is not a string, `null` (every element) or an
+index (one element), ends the path there, so `["nationalities", null]` is
+looked up as `nationalities`, the key wallet-core registers an SD-JWT VC array
+under. Upstream builds a `std::string` from the null that cJSON returns for
+such an element, and no credential matches (`dcql.cpp`).
+
 Every change is marked `GRNET fork`. To see the patch:
 `git diff <commit that added this directory> -- wallet-core/matcher`.
 
@@ -34,8 +41,8 @@ $ make clean && make -j && cp build/matcher.wasm ../src/main/assets/identitycred
 
 `test/test.sh` builds the same sources, with stub Credential Manager
 functions that print what the matcher reports, and checks the payment entries
-on requests from `test/fixtures.py`. It needs the WASI SDK, Node 20 or later,
-and python3.
+and array claim paths on requests from `test/fixtures.py`. It needs the WASI
+SDK, Node 20 or later, and python3.
 
 # Upstream README
 

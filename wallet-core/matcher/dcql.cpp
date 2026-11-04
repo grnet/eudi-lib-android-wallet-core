@@ -46,6 +46,14 @@ DcqlQuery DcqlQuery::parse(cJSON* dcqlQuery) {
             std::vector<std::string> path;
             cJSON* pathElem;
             cJSON_ArrayForEach(pathElem, cJSON_GetObjectItem(claim, "path")) {
+                // GRNET fork: a null (every element of an array) or an index (one element) selects
+                // inside an array, which wallet-core registers under the array's own path only. The
+                // path stops at the array, so ["nationalities", null] matches a credential that has
+                // nationalities. Before, std::string was built from the null cJSON_GetStringValue
+                // returns for them, and no credential matched.
+                if (!cJSON_IsString(pathElem)) {
+                    break;
+                }
                 path.push_back(std::string(cJSON_GetStringValue(pathElem)));
             }
 

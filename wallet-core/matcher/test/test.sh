@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 #
-# GRNET fork: tests the matcher's payment entries. Builds the matcher's sources, with stub
-# Credential Manager host functions (stubs.cpp) that print what the matcher reports, into a
-# WASI program, and runs it under Node on requests and credential databases from fixtures.py.
+# GRNET fork: tests the matcher's payment entries and array claim paths. Builds the matcher's
+# sources, with stub Credential Manager host functions (stubs.cpp) that print what the matcher
+# reports, into a WASI program, and runs it under Node on requests and credential databases
+# from fixtures.py.
 #
 # Needs the WASI SDK 20 the Makefile uses, Node 20 or later, and python3.
 #
@@ -76,6 +77,17 @@ expect "payment bound to another query: the card is shown as a credential" 'entr
 
 out=$(run signed_payment.json db.cbor 1)
 expect_not "Credential Manager runtime 1: no payment entry" 'PAYMENT' "$out"
+
+# A claim path with null (every element of an array) or an index: the reference verifier asks
+# for nationalities as ["nationalities", null]. wallet-core registers the array under its own name.
+out=$(run pid_array.json db_pid_full.cbor)
+expect "array asked for by name: the PID matches" 'entry   id=0 openid4vp-v1-signed doc-pid title="PID"' "$out"
+out=$(run pid_all_elements.json db_pid_full.cbor)
+expect "array asked for with null: the PID matches" 'entry   id=0 openid4vp-v1-signed doc-pid title="PID"' "$out"
+out=$(run pid_one_element.json db_pid_full.cbor)
+expect "array element asked for by index: the PID matches" 'entry   id=0 openid4vp-v1-signed doc-pid title="PID"' "$out"
+out=$(run pid_missing_claim.json db_pid_full.cbor)
+expect_not "an array the PID does not have: no match" 'doc-pid' "$out"
 
 if [[ "$fail" -eq 0 ]]; then
     echo "all passed"

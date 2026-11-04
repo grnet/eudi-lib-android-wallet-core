@@ -63,6 +63,15 @@ workflow, and these changes:
   title the credential selector shows instead of the document's name, so an
   app can show every PID as "Person Identification Data", whatever its format
   and whatever the issuer calls it. A payment card's own title comes first.
+- **Array claims asked for by element** (`0.31.0-grnet.6`). A DCQL claim path
+  that selects inside an array, `["nationalities", null]` for every element or
+  `["nationalities", 0]` for one, now matches a credential that has the array.
+  wallet-core registers an SD-JWT VC array under its own path only, so the
+  matcher stops the path at the array. Before, it built a `std::string` from
+  the null that cJSON returns for a non-string element, and no credential
+  matched: Android answered "Your info wasn't found". The reference verifier
+  asks for a PID's nationalities this way, so every PID request from it over
+  the Digital Credentials API failed. Also a candidate for multipaz.
 
 Known limitations of these changes:
 
