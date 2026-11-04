@@ -1,0 +1,206 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "eu.europa.ec.eudi",
+    "module": "eudi-lib-android-iso18013-data-transfer",
+    "version": "0.31.1-grnet.1",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.5.0"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseVariantMavenApiPublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.2.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "eudi-lib-android-iso18013-data-transfer-0.31.1-grnet.1.aar",
+          "url": "eudi-lib-android-iso18013-data-transfer-0.31.1-grnet.1.aar",
+          "size": 189743,
+          "sha512": "9e98a4ebc5cd6d9322e791bbaab9590c1a4bd848c093839d627b32d4bbafb979a3da29ff2fc34e7e299d386167731ac912df56fbe55ebe2555faab825ded146c",
+          "sha256": "770092839a15ee32a1501578ee0130837b7d1a5309fc6a5d15b7f3e082bc9120",
+          "sha1": "daa4d25c9d1848bebc00c472d9a32553b461be6c",
+          "md5": "2be707a0e169d7a9dfe431fc926ae5ce"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantMavenRuntimePublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-parcelize-runtime",
+          "version": {
+            "requires": "2.2.21"
+          }
+        },
+        {
+          "group": "eu.europa.ec.eudi",
+          "module": "eudi-lib-android-wallet-document-manager",
+          "version": {
+            "requires": "0.31.1-grnet.1"
+          }
+        },
+        {
+          "group": "androidx.appcompat",
+          "module": "appcompat",
+          "version": {
+            "requires": "1.7.1"
+          }
+        },
+        {
+          "group": "org.multipaz",
+          "module": "multipaz-android",
+          "version": {
+            "requires": "0.101.0"
+          },
+          "excludes": [
+            {
+              "group": "org.bouncycastle",
+              "module": "*"
+            },
+            {
+              "group": "io.ktor",
+              "module": "*"
+            }
+          ]
+        },
+        {
+          "group": "org.multipaz",
+          "module": "multipaz-android-legacy",
+          "version": {
+            "requires": "0.101.0"
+          },
+          "excludes": [
+            {
+              "group": "org.bouncycastle",
+              "module": "*"
+            },
+            {
+              "group": "io.ktor",
+              "module": "*"
+            }
+          ]
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-io-core",
+          "version": {
+            "requires": "0.7.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-io-bytestring",
+          "version": {
+            "requires": "0.7.0"
+          }
+        },
+        {
+          "group": "com.google.zxing",
+          "module": "core",
+          "version": {
+            "requires": "3.5.3"
+          }
+        },
+        {
+          "group": "org.bouncycastle",
+          "module": "bcprov-jdk18on",
+          "version": {
+            "requires": "1.78.1"
+          }
+        },
+        {
+          "group": "org.bouncycastle",
+          "module": "bcpkix-jdk18on",
+          "version": {
+            "requires": "1.78.1"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.2.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "eudi-lib-android-iso18013-data-transfer-0.31.1-grnet.1.aar",
+          "url": "eudi-lib-android-iso18013-data-transfer-0.31.1-grnet.1.aar",
+          "size": 189743,
+          "sha512": "9e98a4ebc5cd6d9322e791bbaab9590c1a4bd848c093839d627b32d4bbafb979a3da29ff2fc34e7e299d386167731ac912df56fbe55ebe2555faab825ded146c",
+          "sha256": "770092839a15ee32a1501578ee0130837b7d1a5309fc6a5d15b7f3e082bc9120",
+          "sha1": "daa4d25c9d1848bebc00c472d9a32553b461be6c",
+          "md5": "2be707a0e169d7a9dfe431fc926ae5ce"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantMavenSourcePublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "eudi-lib-android-iso18013-data-transfer-0.31.1-grnet.1-sources.jar",
+          "url": "eudi-lib-android-iso18013-data-transfer-0.31.1-grnet.1-sources.jar",
+          "size": 65094,
+          "sha512": "5863fb680a4b7b40fc3aad48e01bfa9ee1675603b206788f57e59e0a28767d3dc9262c1c88fd8cc00184f809813484049e9efbd9a3833dd61adc4464946b1648",
+          "sha256": "ce9c645f589895ed95465b4cdd43c5694a3b885cd85cf83e5777189810cf7e6c",
+          "sha1": "3e40c3aca9dd8b0c44d50f4ca6156376704d3a62",
+          "md5": "a1ce7f83991d3f29a43a4b272d5202c7"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantMavenJavaDocPublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "eudi-lib-android-iso18013-data-transfer-0.31.1-grnet.1-javadoc.jar",
+          "url": "eudi-lib-android-iso18013-data-transfer-0.31.1-grnet.1-javadoc.jar",
+          "size": 1178262,
+          "sha512": "ba1cd7c6926510ae18bd4dc3e2bf88fa11824c1e5e5c82b1ad2bb0ce5a8b6a66f4acac1f1f4442d9d7b8d90ad71675e8473e40242956caa3feb6b5e57f6bc8bb",
+          "sha256": "866dfe016e7ddd5620936170b99b98438b07ae8b52665621e73e63a3ecc5b34a",
+          "sha1": "47f8438342b2c61099c90082fd40c8137b650bcd",
+          "md5": "20e27dfc2a4d64760f3f8778d50475c0"
+        }
+      ]
+    }
+  ]
+}
