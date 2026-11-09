@@ -36,6 +36,7 @@ import eu.europa.ec.eudi.wallet.document.metadata.IssuerMetadata
 import eu.europa.ec.eudi.wallet.internal.d
 import eu.europa.ec.eudi.wallet.internal.e
 import eu.europa.ec.eudi.wallet.logging.Logger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -128,7 +129,7 @@ internal class DCAPICredentialRegistry private constructor(
          * the fallback for a document that carries none and is intentionally left empty, so any such
          * document is hidden rather than offered over every protocol. Each data element or claim is a
          * 3-element array `[displayName, value, matchValue]`, where `matchValue` is the value used to
-         * match the document against a request.
+         * match the document against a request. A document that cannot be serialized is left out.
          */
         private suspend fun List<IssuedDocument>.toCredentialBytes(
             context: Context,
@@ -140,41 +141,47 @@ internal class DCAPICredentialRegistry private constructor(
             val credentialsArray = CBORObject.NewArray()
             val cardArtStore = CardArtStore(context, logger, ioDispatcher)
             forEach { document ->
-                // GRNET fork: a payment card is shown by its own name, last four digits and card
-                // art, from the display meta-data its issuer delivered with it. The card art is
-                // the copy kept on the device, which the wallet's own screens show too.
-                val card = CardDisplay.of(document)
-                val cardArtBytes = card?.cardArt?.anyTheme?.let { url ->
-                    cardArtStore.get(url)?.let { toIconBytes(it, logger) }
-                }
-
-                // Issuer-provided logo, or an empty placeholder when none is available.
-                val bitmapBytes = cardArtBytes ?: document.issuerMetadata?.let {
-                    getBitmapBytes(it, context, ioDispatcher, logger)
-                } ?: byteArrayOf(0)
-
-                val credential = CBORObject.NewMap().apply {
-                    Add(TITLE, card?.title ?: document.selectorTitle(credentialTitles))
-                    Add(SUBTITLE, card?.maskedNumber ?: context.getAppName())
-                    Add(BITMAP, bitmapBytes)
-                }
-
-                when (val format = document.format) {
-                    is MsoMdocFormat -> {
-                        logger?.d(TAG, "Adding mdoc credential id=${document.id}, docType=${format.docType}")
-                        // MSO mdoc can be presented over every supported protocol.
-                        credential.Add(PROTOCOLS, protocols.toProtocolsCbor())
-                        credential.Add(MDOC, document.toMdocEntry(format, context))
+                try {
+                    // GRNET fork: a payment card is shown by its own name, last four digits and card
+                    // art, from the display meta-data its issuer delivered with it. The card art is
+                    // the copy kept on the device, which the wallet's own screens show too.
+                    val card = CardDisplay.of(document)
+                    val cardArtBytes = card?.cardArt?.anyTheme?.let { url ->
+                        cardArtStore.get(url)?.let { toIconBytes(it, logger) }
                     }
 
-                    is SdJwtVcFormat -> {
-                        logger?.d(TAG, "Adding SD-JWT VC credential id=${document.id}, vct=${format.vct}")
-                        // SD-JWT VC can be presented over OpenID4VP.
-                        credential.Add(PROTOCOLS, protocols.filter { it.isOpenId4Vp }.toProtocolsCbor())
-                        credential.Add(SDJWT, document.toSdJwtEntry(format, context))
+                    // Issuer-provided logo, or an empty placeholder when none is available.
+                    val bitmapBytes = cardArtBytes ?: document.issuerMetadata?.let {
+                        getBitmapBytes(it, context, ioDispatcher, logger)
+                    } ?: byteArrayOf(0)
+
+                    val credential = CBORObject.NewMap().apply {
+                        Add(TITLE, card?.title ?: document.selectorTitle(credentialTitles))
+                        Add(SUBTITLE, card?.maskedNumber ?: context.getAppName())
+                        Add(BITMAP, bitmapBytes)
                     }
+
+                    when (val format = document.format) {
+                        is MsoMdocFormat -> {
+                            logger?.d(TAG, "Adding mdoc credential id=${document.id}, docType=${format.docType}")
+                            // MSO mdoc can be presented over every supported protocol.
+                            credential.Add(PROTOCOLS, protocols.toProtocolsCbor())
+                            credential.Add(MDOC, document.toMdocEntry(format, context))
+                        }
+
+                        is SdJwtVcFormat -> {
+                            logger?.d(TAG, "Adding SD-JWT VC credential id=${document.id}, vct=${format.vct}")
+                            // SD-JWT VC can be presented over OpenID4VP.
+                            credential.Add(PROTOCOLS, protocols.filter { it.isOpenId4Vp }.toProtocolsCbor())
+                            credential.Add(SDJWT, document.toSdJwtEntry(format, context))
+                        }
+                    }
+                    credentialsArray.Add(credential)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Throwable) {
+                    logger?.e(TAG, "Document id=${document.id} is not registered: ${e::class.simpleName}", e)
                 }
-                credentialsArray.Add(credential)
             }
 
             val database = CBORObject.NewMap().apply {

@@ -15,7 +15,7 @@ Upstream's own README is [at the root](../README.md).
 
 ## What differs from upstream
 
-`grnet` is upstream `v0.31.1` (from `0.31.1-grnet.1`; `v0.31.0` before) with
+`grnet` is upstream `v0.32.0` (from `0.32.0-grnet.1`; `v0.31.1` and `v0.31.0` before) with
 its own version number, a release workflow, and these changes, each listed
 with the release that brought it:
 
@@ -40,7 +40,7 @@ with the release that brought it:
   `rb-sca-card-dpc` §2.9 and §4.1, has the issuer deliver each card's display
   meta-data, unsigned, in the `display` array of the credential response:
   `alias`, `last_four`, `card_art`, the issuer and the network branding.
-  - GRNET's OpenID4VCI library, `0.14.1-grnet.1`, passes that array through
+  - GRNET's OpenID4VCI library (`0.16.0-grnet.1` from `0.32.0-grnet.1`) passes that array through
     (upstream drops it, as OpenID4VCI 1.0 does not define it).
   - `ProcessResponse` stores it with the document before storing the document,
     as `IssuerMetadata.credentialDisplay`, through the new
@@ -73,6 +73,11 @@ with the release that brought it:
   matched: Android answered "Your info wasn't found". The reference verifier
   asks for a PID's nationalities this way, so every PID request from it over
   the Digital Credentials API failed. Also a candidate for multipaz.
+- **Card art cannot stop the Digital Credentials API registration**
+  (`0.32.0-grnet.1`). The card art store resolves its directory on first use,
+  not when created: the registration creates one for every document list, and
+  since `0.32.0` a failure outside a single document fails the whole
+  registration.
 
 Known limitations of these changes:
 
@@ -152,7 +157,8 @@ version catalog pins the version. To build the app against a local rehearsal,
 pass `-PgrnetMavenUrl=file:///tmp/grnet-maven`.
 
 From `0.31.0-grnet.3` this library depends on GRNET's release of the OpenID4VCI
-library, `eu.europa.ec.eudi:eudi-lib-jvm-openid4vci-kt:0.14.1-grnet.1`, from
+library, `eu.europa.ec.eudi:eudi-lib-jvm-openid4vci-kt:0.16.0-grnet.1` (`0.14.1-grnet.1`
+until `0.31.1-grnet.1`), from
 [grnet/eudi-lib-jvm-openid4vci-kt](https://github.com/grnet/eudi-lib-jvm-openid4vci-kt)'s
 own Maven repository, `https://grnet.github.io/eudi-lib-jvm-openid4vci-kt/maven/`.
 This build and the app both take `*-grnet.N` versions of it from there only;

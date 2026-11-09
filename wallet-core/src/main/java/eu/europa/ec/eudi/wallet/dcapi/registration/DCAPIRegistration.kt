@@ -96,6 +96,21 @@ class DefaultDCAPIRegistration(
                     }
                 logger?.d(TAG, "Found ${issuedDocuments.size} issued documents for DC API (openId4VpEnabled=$openId4VpEnabled): ${issuedDocuments.map { it.id }}")
 
+                // The new registries are built before the current registrations are cleared.
+                val registries = if (issuedDocuments.isEmpty()) {
+                    emptyList()
+                } else {
+                    DCAPICredentialRegistry(
+                        context = context,
+                        documents = issuedDocuments,
+                        id = REGISTRY_ID,
+                        logger = logger,
+                        ioDispatcher = ioDispatcher,
+                        protocols = supportedProtocols,
+                        credentialTitles = credentialTitles,
+                    )
+                }
+
                 logger?.d(TAG, "Calling clearCredentialRegistry(isDeleteAll=true)...")
                 registryManager.clearCredentialRegistry(
                     ClearCredentialRegistryRequest(isDeleteAll = true)
@@ -106,16 +121,6 @@ class DefaultDCAPIRegistration(
                     logger?.i(TAG, "No documents to register for DC API; cleared existing registrations")
                     return@withContext
                 }
-
-                val registries = DCAPICredentialRegistry(
-                    context = context,
-                    documents = issuedDocuments,
-                    id = REGISTRY_ID,
-                    logger = logger,
-                    ioDispatcher = ioDispatcher,
-                    protocols = supportedProtocols,
-                    credentialTitles = credentialTitles,
-                )
 
                 logger?.d(TAG, "Registering ${registries.size} DC API registr(ies)...")
                 registries.forEach { registry ->

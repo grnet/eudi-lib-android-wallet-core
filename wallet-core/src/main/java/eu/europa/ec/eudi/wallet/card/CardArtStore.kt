@@ -50,7 +50,9 @@ class CardArtStore @JvmOverloads constructor(
     private val logger: Logger? = null,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
-    private val directory = File(context.noBackupFilesDir, DIRECTORY)
+    // Resolved on first use, so that creating a store cannot fail: the Digital Credentials API
+    // registration creates one for every document list, card art or not.
+    private val directory by lazy { File(context.noBackupFilesDir, DIRECTORY) }
 
     /**
      * The image at [url], an HTTPS or base64 `data:` URL, or `null` if there is none or it cannot
